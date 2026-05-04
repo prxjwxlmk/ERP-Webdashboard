@@ -1,0 +1,3587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NGEF (HUBLI) Ltd. — Manufacturing Inventory</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&family=Barlow:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0a0d12; --surface: #111620; --surface2: #171d2b; --border: #1e2a3a;
+  --accent: #00d4ff; --green: #00e676; --yellow: #ffd740; --red: #ff5252;
+  --text: #e0eaff; --muted: #5a6a85;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Barlow', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--font-body); min-height:100vh; display:flex; }
+
+/* ── LOGIN ── */
+#login-screen {
+  position:fixed; inset:0; z-index:9999;
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+}
+.login-box {
+  width:380px; background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,0.6);
+}
+.login-header {
+  padding:32px 32px 24px; border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(0,212,255,0.06),transparent);
+}
+.login-logo { font-family:var(--font-display); font-size:28px; font-weight:700; letter-spacing:3px; color:var(--accent); }
+.login-tagline { font-size:11px; color:var(--muted); font-family:var(--font-mono); letter-spacing:2px; margin-top:4px; }
+.login-body { padding:28px 32px 32px; }
+.login-body .form-group { margin-bottom:16px; }
+.login-error {
+  background:rgba(255,82,82,0.1); border:1px solid rgba(255,82,82,0.3);
+  color:var(--red); border-radius:6px; padding:10px 14px;
+  font-size:12px; font-family:var(--font-mono); margin-bottom:16px; display:none;
+}
+
+/* ── ROLE BADGES ── */
+.role-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-family:var(--font-mono); letter-spacing:1px; text-transform:uppercase; }
+.role-admin      { background:rgba(255,107,43,0.15); color:#ff6b2b; border:1px solid rgba(255,107,43,0.3); }
+.role-store      { background:rgba(0,212,255,0.12);  color:var(--accent); border:1px solid rgba(0,212,255,0.3); }
+.role-production { background:rgba(0,230,118,0.12);  color:var(--green); border:1px solid rgba(0,230,118,0.3); }
+.role-viewer     { background:rgba(90,106,133,0.2);  color:var(--muted); border:1px solid var(--border); }
+
+/* ── MODAL ── */
+#pwd-modal { position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; }
+#pwd-modal.open { display:flex; }
+.modal-box { background:var(--surface); border:1px solid var(--border); border-radius:12px; width:460px; overflow:hidden; box-shadow:0 24px 60px rgba(0,0,0,0.5); }
+.modal-header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.modal-body { padding:20px 24px 24px; }
+.modal-row { display:grid; grid-template-columns:110px 1fr 80px; gap:8px; align-items:end; margin-bottom:10px; }
+
+/* ── SIDEBAR ── */
+.sidebar { width:220px; min-height:100vh; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+.logo { padding:28px 20px 24px; border-bottom:1px solid var(--border); }
+.logo-title { font-family:var(--font-display); font-size:22px; font-weight:700; letter-spacing:2px; color:var(--accent); }
+.logo-sub { font-size:10px; color:var(--muted); letter-spacing:3px; text-transform:uppercase; margin-top:2px; font-family:var(--font-mono); }
+.nav { flex:1; padding:16px 0; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:11px 20px; cursor:pointer; color:var(--muted); font-size:13px; font-weight:500; letter-spacing:0.5px; transition:all 0.2s; border-left:3px solid transparent; }
+.nav-item:hover { color:var(--text); background:var(--surface2); }
+.nav-item.active { color:var(--accent); border-left-color:var(--accent); background:rgba(0,212,255,0.06); }
+.nav-item.hidden { display:none; }
+.nav-icon { font-size:16px; }
+.sidebar-footer { padding:16px 20px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); font-family:var(--font-mono); }
+
+/* ── MAIN ── */
+.main { flex:1; display:flex; flex-direction:column; overflow:auto; }
+.topbar { padding:18px 32px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--surface); }
+.page-title { font-family:var(--font-display); font-size:24px; font-weight:700; letter-spacing:1px; }
+.page-subtitle { font-size:12px; color:var(--muted); margin-top:2px; }
+.status-pill { display:flex; align-items:center; gap:6px; background:rgba(0,230,118,0.1); border:1px solid rgba(0,230,118,0.3); padding:5px 12px; border-radius:20px; font-size:11px; color:var(--green); font-family:var(--font-mono); transition:all 0.4s; }
+.status-pill.offline { background:rgba(255,82,82,0.1); border-color:rgba(255,82,82,0.3); color:var(--red); }
+.status-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; transition:background 0.4s; }
+.status-pill.offline .status-dot { background:var(--red); animation:none; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── REPORTS ── */
+.report-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-bottom:24px; }
+.report-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  padding:22px 24px; position:relative; overflow:hidden;
+  display:flex; flex-direction:column; gap:10px;
+}
+.report-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); }
+.report-card-title { font-family:var(--font-display); font-size:15px; font-weight:600; letter-spacing:1px; }
+.report-card-desc { font-size:12px; color:var(--muted); line-height:1.6; }
+.report-btn-row { display:flex; gap:8px; margin-top:6px; }
+.btn-excel { background:rgba(0,230,118,0.12); color:var(--green); border:1px solid rgba(0,230,118,0.3); }
+.btn-excel:hover { background:rgba(0,230,118,0.22); }
+.btn-pdf   { background:rgba(255,82,82,0.12);  color:var(--red);   border:1px solid rgba(255,82,82,0.3);  }
+.btn-pdf:hover   { background:rgba(255,82,82,0.22); }
+.report-filter-row { display:flex; gap:12px; align-items:flex-end; padding:16px 20px 0; flex-wrap:wrap; }
+.report-preview { padding:0 20px 20px; }
+.report-preview table { font-size:12px; }
+.report-preview th { font-size:9px; }
+
+.user-pill { display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:5px 14px 5px 8px; cursor:pointer; transition:border-color 0.2s; }
+.user-pill:hover { border-color:var(--muted); }
+
+/* ── CONTENT ── */
+.content { padding:28px 32px; flex:1; }
+.section { display:none; }
+.section.active { display:block; }
+
+/* ── STAT CARDS ── */
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px; position:relative; overflow:hidden; }
+.stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); }
+.stat-card.warn::before { background:var(--yellow); }
+.stat-card.danger::before { background:var(--red); }
+.stat-card.ok::before { background:var(--green); }
+.stat-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; font-family:var(--font-mono); }
+.stat-value { font-family:var(--font-display); font-size:36px; font-weight:700; line-height:1.1; margin-top:6px; }
+.stat-note { font-size:11px; color:var(--muted); margin-top:4px; }
+
+/* ── CARDS + TABLES ── */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:24px; }
+.card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-title { font-family:var(--font-display); font-size:16px; font-weight:600; letter-spacing:1px; }
+table { width:100%; border-collapse:collapse; }
+th { background:var(--surface2); padding:10px 16px; text-align:left; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; font-family:var(--font-mono); font-weight:400; }
+td { padding:11px 16px; font-size:13px; border-bottom:1px solid rgba(30,42,58,0.6); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+
+/* ── BADGES ── */
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-family:var(--font-mono); font-weight:500; }
+.badge-ok   { background:rgba(0,230,118,0.12); color:var(--green);  border:1px solid rgba(0,230,118,0.3); }
+.badge-warn { background:rgba(255,215,64,0.12); color:var(--yellow); border:1px solid rgba(255,215,64,0.3); }
+.badge-low  { background:rgba(255,82,82,0.12);  color:var(--red);    border:1px solid rgba(255,82,82,0.3); }
+
+/* ── STOCK BAR ── */
+.qty-bar-wrap { display:flex; align-items:center; gap:8px; }
+.qty-bar { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; min-width:60px; }
+.qty-bar-fill { height:100%; border-radius:2px; transition:width 0.4s; }
+.expanded-row td { background:rgba(255,255,255,0.04); border-bottom:1px solid rgba(30,42,58,0.6); padding:0; }
+.expanded-panel { padding:18px 20px; display:grid; gap:14px; background:rgba(255,255,255,0.03); border-radius:0 0 10px 10px; }
+.expanded-panel .edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.expanded-panel textarea { min-height:100px; resize:vertical; }
+.expanded-panel .edit-actions { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+/* ── FORMS ── */
+.form-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; padding:20px; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; font-family:var(--font-mono); }
+input, select, textarea { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:9px 12px; color:var(--text); font-size:13px; font-family:var(--font-body); transition:border-color 0.2s; outline:none; }
+
+/* ── TRANSFORMER MATERIALS ADD ROW — large inputs ── */
+#trf-add-mat-row input {
+  background: var(--surface2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  padding: 16px 18px !important;
+  font-size: 16px !important;
+  color: var(--text) !important;
+  width: 100% !important;
+  transition: border-color 0.2s;
+  outline: none;
+}
+#trf-add-mat-row input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.1) !important;
+}
+#trf-add-mat-row .btn-primary {
+  padding: 16px 24px !important;
+  font-size: 16px !important;
+  letter-spacing: 2px !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+}
+input:focus, select:focus { border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,212,255,0.08); }
+input:disabled, select:disabled { opacity:0.4; cursor:not-allowed; }
+select option { background:var(--surface2); }
+
+/* ── BUTTONS ── */
+.btn { padding:9px 20px; border-radius:6px; border:none; cursor:pointer; font-size:13px; font-weight:500; font-family:var(--font-display); letter-spacing:1px; transition:all 0.2s; }
+.btn-primary { background:var(--accent); color:#000; }
+.btn-primary:hover { background:#29ddff; transform:translateY(-1px); }
+.btn-primary:disabled { opacity:0.3; cursor:not-allowed; transform:none; }
+.btn-danger { background:rgba(255,82,82,0.15); color:var(--red); border:1px solid rgba(255,82,82,0.3); }
+.btn-danger:hover { background:rgba(255,82,82,0.25); }
+.btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--text); border-color:var(--muted); }
+.btn-sm { padding:5px 12px; font-size:11px; }
+.form-actions { padding:0 20px 20px; display:flex; gap:10px; }
+.card-search-row {
+  padding:16px 20px 12px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.card-search-row input {
+  flex:1;
+  min-width:180px;
+  padding:12px 14px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text);
+}
+.card-search-row button {
+  height:44px;
+}
+#inventory-table-wrap {
+  padding:0 20px 20px;
+}
+
+/* ── BOM ── */
+.bom-list { padding:16px 20px; display:flex; flex-direction:column; gap:8px; }
+.bom-row { display:grid; grid-template-columns:1fr 100px 80px 32px; gap:8px; align-items:center; }
+
+/* ── PRODUCTION ── */
+.produce-form { padding:20px; }
+.feasibility-panel { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; margin-top:16px; }
+.feasibility-title { font-family:var(--font-mono); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px; }
+.feasibility-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:5px 0; border-bottom:1px solid rgba(30,42,58,0.6); }
+.feasibility-row:last-child { border-bottom:none; }
+
+/* ── LOG ── */
+.log-entry { display:flex; align-items:flex-start; gap:14px; padding:12px 20px; border-bottom:1px solid rgba(30,42,58,0.5); font-size:12px; }
+.log-time { color:var(--muted); font-family:var(--font-mono); font-size:11px; white-space:nowrap; }
+.log-icon { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:11px; }
+.log-produce { background:rgba(0,212,255,0.12); color:var(--accent); }
+.log-restock { background:rgba(0,230,118,0.12); color:var(--green); }
+.log-add     { background:rgba(255,215,64,0.12); color:var(--yellow); }
+
+/* ── READONLY OVERLAY ── */
+.readonly-banner { background:rgba(255,215,64,0.08); border:1px solid rgba(255,215,64,0.2); color:var(--yellow); padding:10px 16px; border-radius:8px; font-size:12px; font-family:var(--font-mono); margin-bottom:16px; display:none; }
+
+/* ── TOAST ── */
+.toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:10000; }
+.toast { padding:12px 18px; border-radius:8px; font-size:13px; font-family:var(--font-mono); animation:slideIn 0.3s ease; max-width:300px; }
+.toast-success { background:rgba(0,230,118,0.15); border:1px solid rgba(0,230,118,0.4); color:var(--green); }
+.toast-error   { background:rgba(255,82,82,0.15);  border:1px solid rgba(255,82,82,0.4);  color:var(--red); }
+.toast-info    { background:rgba(0,212,255,0.15);  border:1px solid rgba(0,212,255,0.4);  color:var(--accent); }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+.empty-state { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
+/* ── LOW STOCK BANNER ── */
+#low-stock-banner {
+  display:none;
+  background:linear-gradient(135deg, rgba(255,82,82,0.12), rgba(255,82,82,0.06));
+  border:1px solid rgba(255,82,82,0.4);
+  border-left:4px solid var(--red);
+  border-radius:8px;
+  padding:14px 16px;
+  margin-bottom:20px;
+  position:relative;
+}
+#low-stock-banner.visible { display:block; }
+.lsb-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;
+}
+.lsb-title {
+  font-family:var(--font-display); font-size:15px; font-weight:700;
+  color:var(--red); letter-spacing:1px; display:flex; align-items:center; gap:8px;
+}
+.lsb-close {
+  background:transparent; border:none; color:var(--muted); cursor:pointer;
+  font-size:18px; line-height:1; padding:0 4px; transition:color 0.2s;
+}
+.lsb-close:hover { color:var(--text); }
+.lsb-items {
+  display:flex; flex-wrap:wrap; gap:8px;
+}
+.lsb-item {
+  background:rgba(255,82,82,0.1); border:1px solid rgba(255,82,82,0.25);
+  border-radius:6px; padding:5px 12px; font-size:12px; font-family:var(--font-mono);
+  display:flex; align-items:center; gap:8px;
+}
+.lsb-item-name { color:var(--text); font-weight:500; }
+.lsb-item-qty  { color:var(--red); }
+.lsb-item-out  { background:rgba(255,82,82,0.2); border-color:rgba(255,82,82,0.5); }
+.lsb-item-badge {
+  font-size:9px; padding:1px 5px; border-radius:3px; font-weight:700;
+  background:var(--red); color:#fff; letter-spacing:1px;
+}
+
+.empty-icon { font-size:32px; margin-bottom:8px; }
+
+/* ── IMAGES ── */
+.img-thumb { width:40px; height:40px; border-radius:6px; object-fit:cover; border:1px solid var(--border); background:var(--surface2); flex-shrink:0; display:block; }
+.img-motor { width:120px; height:120px; border-radius:8px; object-fit:cover; border:1px solid var(--border); background:var(--surface2); }
+.img-widget { background:var(--surface2); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-top:4px; }
+.img-tabs { display:flex; border-bottom:1px solid var(--border); }
+.img-tab { padding:7px 16px; font-size:11px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:1px; cursor:pointer; color:var(--muted); border:none; background:transparent; transition:all 0.2s; border-bottom:2px solid transparent; }
+.img-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.img-pane { padding:12px; display:none; }
+.img-pane.active { display:block; }
+.img-preview { margin-top:10px; display:flex; align-items:center; gap:10px; padding:8px; background:var(--bg); border-radius:6px; border:1px solid var(--border); }
+.img-preview img { width:52px; height:52px; object-fit:cover; border-radius:4px; }
+.img-preview-name { font-size:11px; color:var(--muted); font-family:var(--font-mono); word-break:break-all; flex:1; }
+.img-clear { margin-left:auto; background:transparent; border:none; color:var(--red); cursor:pointer; font-size:16px; flex-shrink:0; line-height:1; }
+.img-file-btn { display:inline-block; padding:7px 14px; background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.3); color:var(--accent); border-radius:6px; font-size:11px; font-family:var(--font-mono); cursor:pointer; }
+.img-file-btn:hover { background:rgba(0,212,255,0.18); }
+/* ── MOTOR PICKER ── */
+.motor-picker { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; padding:4px 0 16px; }
+.mpc { background:var(--surface2); border:2px solid var(--border); border-radius:8px; padding:12px; cursor:pointer; text-align:center; transition:all 0.2s; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.mpc:hover { border-color:var(--muted); }
+.mpc.selected { border-color:var(--accent); background:rgba(0,212,255,0.06); }
+.mpc-img { width:80px; height:80px; object-fit:cover; border-radius:6px; border:1px solid var(--border); background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--muted); }
+.mpc-img img { width:100%; height:100%; object-fit:cover; border-radius:5px; }
+.mpc-name { font-size:12px; font-weight:600; line-height:1.3; }
+.mpc-power { font-size:10px; color:var(--muted); font-family:var(--font-mono); }
+
+/* ── MODULE SELECTOR ── */
+#module-selector {
+  position:fixed; inset:0; z-index:9998;
+  background:var(--bg);
+  display:none; align-items:center; justify-content:center;
+}
+#module-selector.open { display:flex; }
+.module-selector-box {
+  width:520px; background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,0.6);
+}
+.module-selector-header {
+  padding:28px 32px 20px; border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(0,212,255,0.06),transparent);
+  text-align:center;
+}
+.module-selector-title { font-family:var(--font-display); font-size:24px; font-weight:700; letter-spacing:2px; color:var(--accent); }
+.module-selector-sub { font-size:11px; color:var(--muted); font-family:var(--font-mono); letter-spacing:2px; margin-top:4px; }
+.module-selector-body { padding:28px 32px 32px; display:flex; flex-direction:column; gap:14px; }
+.module-btn {
+  display:flex; align-items:center; gap:16px;
+  padding:18px 22px; border-radius:10px;
+  background:var(--surface2); border:2px solid var(--border);
+  cursor:pointer; transition:all 0.2s; text-align:left;
+}
+.module-btn:hover { border-color:var(--accent); background:rgba(0,212,255,0.06); transform:translateY(-1px); }
+.module-btn-icon { font-size:32px; flex-shrink:0; }
+.module-btn-title { font-family:var(--font-display); font-size:17px; font-weight:700; letter-spacing:1px; color:var(--text); }
+.module-btn-desc { font-size:11px; color:var(--muted); font-family:var(--font-mono); margin-top:3px; }
+
+/* ── TRANSFORMER STATUS BADGES ── */
+.trf-status { display:inline-block; padding:3px 10px; border-radius:4px; font-size:11px; font-family:var(--font-mono); font-weight:600; letter-spacing:1px; }
+.trf-received   { background:rgba(0,212,255,0.12);  color:var(--accent);  border:1px solid rgba(0,212,255,0.3);  }
+.trf-inrepair   { background:rgba(255,215,64,0.12);  color:var(--yellow);  border:1px solid rgba(255,215,64,0.3);  }
+.trf-testing    { background:rgba(255,107,43,0.12);  color:#ff6b2b;        border:1px solid rgba(255,107,43,0.3);  }
+.trf-dispatched { background:rgba(0,230,118,0.12);   color:var(--green);   border:1px solid rgba(0,230,118,0.3);   }
+.trf-payment-pending  { background:rgba(255,82,82,0.12); color:var(--red); border:1px solid rgba(255,82,82,0.3); }
+.trf-payment-received { background:rgba(0,230,118,0.12); color:var(--green); border:1px solid rgba(0,230,118,0.3); }
+
+/* ── TRANSFORMER FILE LIST ── */
+.trf-file-item { display:flex; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--border); }
+.trf-file-icon { font-size:20px; flex-shrink:0; }
+.trf-file-name { font-size:13px; color:var(--text); font-weight:500; flex:1; }
+.trf-file-meta { font-size:11px; color:var(--muted); font-family:var(--font-mono); }
+
+/* ── TRF MATERIAL SEARCH DROPDOWN ── */
+.trf-mat-option {
+  padding: 14px 20px;
+  cursor: pointer;
+  font-size: 15px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.15s;
+}
+.trf-mat-option:last-child { border-bottom: none; }
+.trf-mat-option:hover { background: rgba(0,212,255,0.1); }
+.trf-mat-option.trf-mat-opt-low  { border-left: 4px solid var(--yellow); }
+.trf-mat-option.trf-mat-opt-out  { border-left: 4px solid var(--red); opacity: 0.75; }
+.trf-mat-opt-custom {
+  padding: 13px 20px;
+  font-size: 13px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-style: italic;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-top: 1px dashed var(--border);
+}
+.trf-mat-opt-custom:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN SCREEN ════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-header">
+      <div class="login-logo">NGEF (HUBLI) Ltd.</div>
+      <div class="login-tagline">Manufacturing & Repair Management · v4.0</div>
+    </div>
+    <div class="login-body">
+      <div class="login-error" id="login-error"></div>
+      <div class="form-group">
+        <label>Select Your Role</label>
+        <select id="login-role">
+          <option value="">— Choose Role —</option>
+          <option value="admin">Admin</option>
+          <option value="store">Store Manager</option>
+          <option value="production">Production Supervisor</option>
+          <option value="transformer">Transformer Manager</option>
+          <option value="viewer">Viewer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter password"
+          onkeydown="if(event.key==='Enter') doLogin()" />
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">
+        LOGIN  →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ MODULE SELECTOR ════════════ -->
+<div id="module-selector">
+  <div class="module-selector-box">
+    <div class="module-selector-header">
+      <div class="module-selector-title">NGEF (HUBLI) Ltd.</div>
+      <div class="module-selector-sub">Select a module to continue</div>
+    </div>
+    <div class="module-selector-body">
+      <div class="module-btn" id="mod-btn-motor" onclick="selectModule('motor')">
+        <div class="module-btn-icon">⚙</div>
+        <div>
+          <div class="module-btn-title">Motor Manufacturing</div>
+          <div class="module-btn-desc">Inventory · Production · Stock-In · Reports</div>
+        </div>
+      </div>
+      <div class="module-btn" id="mod-btn-transformer" onclick="selectModule('transformer')">
+        <div class="module-btn-icon">⚡</div>
+        <div>
+          <div class="module-btn-title">Transformer Repair</div>
+          <div class="module-btn-desc">Job Register · Materials · Test Files · Billing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ CHANGE PASSWORD MODAL (admin only) ════════════ -->
+<div id="pwd-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="card-title">CHANGE ROLE PASSWORDS</div>
+      <button class="btn btn-ghost btn-sm" onclick="closePwdModal()">✕ Close</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--font-mono)">
+        Update passwords for each role. Min 5 characters.
+      </p>
+      <div id="pwd-rows"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SIDEBAR ════════════ -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-title">NGEF (HUBLI) Ltd.</div>
+    <div class="logo-sub">Mfg. Inventory v2.0</div>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" id="nav-dashboard"  onclick="showSection('dashboard')">
+      <span class="nav-icon">⬡</span> Dashboard
+    </div>
+    <div class="nav-item" id="nav-inventory"  onclick="showSection('inventory')">
+      <span class="nav-icon">◈</span> Raw Materials
+    </div>
+    <div class="nav-item" id="nav-stockin"   onclick="showSection('stockin')">
+      <span class="nav-icon">⬇</span> Stock-In
+    </div>
+    <div class="nav-item" id="nav-motors"     onclick="showSection('motors')">
+      <span class="nav-icon">◎</span> Motor Types
+    </div>
+    <div class="nav-item" id="nav-production" onclick="showSection('production')">
+      <span class="nav-icon">◉</span> Production Entry
+    </div>
+    <div class="nav-item hidden" id="nav-process" onclick="showSection('process')">
+      <span class="nav-icon">⚙</span> Material Processing
+    </div>
+    <div class="nav-item" id="nav-log"        onclick="showSection('log')">
+      <span class="nav-icon">≡</span> Activity Log
+    </div>
+    <div class="nav-item" id="nav-reports"    onclick="showSection('reports')">
+      <span class="nav-icon">⬢</span> Reports
+    </div>
+    <div class="nav-item hidden" id="nav-alerts" onclick="showSection('alerts')">
+      <span class="nav-icon">🔔</span> Alert Settings
+    </div>
+    <!-- Transformer module nav — hidden for motor-only roles -->
+    <div class="nav-item hidden" id="nav-trf-jobs" onclick="showSection('trf-jobs')">
+      <span class="nav-icon">⚡</span> Job Register
+    </div>
+    <div class="nav-item hidden" id="nav-trf-newjob" onclick="showSection('trf-newjob')">
+      <span class="nav-icon">＋</span> New Job
+    </div>
+  </div>
+  <div class="sidebar-footer" id="sidebar-footer">—</div>
+</nav>
+
+<!-- ════════════ MAIN ════════════ -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">DASHBOARD</div>
+      <div class="page-subtitle" id="pageSubtitle">Overview of all stock & production activity</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span id="save-indicator" style="font-family:var(--font-mono);font-size:11px;color:var(--green);opacity:0;transition:opacity 0.5s;">💾 Saved ✓</span>
+      <div class="status-pill" id="server-status-pill"><div class="status-dot"></div><span id="server-status-text"> CHECKING...</span></div>
+      <div class="user-pill" id="user-pill" onclick="handleUserPillClick()" title="Click to manage account">
+        <span id="user-role-badge" class="role-badge">—</span>
+        <span id="user-label" style="font-size:12px;font-family:var(--font-mono)">—</span>
+        <span style="font-size:10px;color:var(--muted);">▾</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="section active" id="sec-dashboard">
+
+      <!-- Low Stock Banner — shown when any material is below threshold -->
+      <div id="low-stock-banner">
+        <div class="lsb-header">
+          <div class="lsb-title">
+            <span>⚠</span>
+            <span id="lsb-title-text">LOW STOCK ALERT</span>
+          </div>
+          <button class="lsb-close" onclick="dismissLowStockBanner()" title="Dismiss until next login">✕</button>
+        </div>
+        <div class="lsb-items" id="lsb-items"></div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Raw Materials</div>
+          <div class="stat-value" id="sv-materials">0</div>
+          <div class="stat-note">items tracked</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-label">Low Stock Alerts</div>
+          <div class="stat-value" id="sv-lowstock">0</div>
+          <div class="stat-note">below threshold</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Motor Types</div>
+          <div class="stat-value" id="sv-motors">0</div>
+          <div class="stat-note">configured</div>
+        </div>
+        <div class="stat-card ok">
+          <div class="stat-label">Production Runs</div>
+          <div class="stat-value" id="sv-runs">0</div>
+          <div class="stat-note">total logged</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">⚠ LOW STOCK ALERTS</div></div>
+        <div id="alert-table-wrap">
+          <div class="empty-state"><div class="empty-icon">✓</div>All materials above threshold</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">INVENTORY SNAPSHOT</div></div>
+        <div id="dash-inventory-wrap">
+          <div class="empty-state"><div class="empty-icon">◈</div>No materials yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INVENTORY ── -->
+    <div class="section" id="sec-inventory">
+      <div class="readonly-banner" id="inv-readonly-banner">
+        👁 You are in read-only mode. Contact Admin or Store Manager to update stock.
+      </div>
+      <!-- Add form: hidden for viewer/production -->
+      <div class="card" id="add-material-card">
+        <div class="card-header"><div class="card-title">ADD MATERIAL</div></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Material Name</label>
+            <input id="mat-name" placeholder="e.g. Copper Wire"/>
+          </div>
+          <div class="form-group">
+            <label>Unit of Measure</label>
+            <select id="mat-unit">
+              <option value="kg">kg</option>
+              <option value="pcs">pcs (pieces)</option>
+              <option value="m">meters</option>
+              <option value="sets">sets</option>
+              <option value="rolls">rolls</option>
+              <option value="liters">liters</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Material Type</label>
+            <select id="mat-type">
+              <option value="raw">Raw</option>
+              <option value="processed">Processed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Current Stock</label>
+            <input id="mat-qty" type="number" placeholder="0" min="0"/>
+          </div>
+          <div class="form-group">
+            <label>Min. Threshold (Alert)</label>
+            <input id="mat-min" type="number" placeholder="0" min="0"/>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="mat-cat">
+              <option>Electrical</option>
+              <option>Mechanical</option>
+              <option>Housing</option>
+              <option>Fasteners</option>
+              <option>Consumables</option>
+            </select>
+          </div>
+        </div>
+        <!-- Image picker (optional) -->
+        <div style="padding:0 20px 8px">
+          <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-family:var(--font-mono)">Image (optional)</label>
+          <div class="img-widget">
+            <div class="img-tabs">
+              <button class="img-tab active" onclick="imgTab('mat','upload')">⬆ Upload</button>
+              <button class="img-tab" onclick="imgTab('mat','url')">🔗 URL</button>
+            </div>
+            <div class="img-pane active" id="mat-pane-upload">
+              <label class="img-file-btn" for="mat-img-file">Choose Image</label>
+              <input type="file" id="mat-img-file" accept="image/*" style="display:none" onchange="imgFile('mat',this)"/>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px;font-family:var(--font-mono)">JPG, PNG, WEBP · Max 5MB</span>
+            </div>
+            <div class="img-pane" id="mat-pane-url">
+              <input type="text" id="mat-img-url" placeholder="https://example.com/photo.jpg" style="width:100%" oninput="imgUrl('mat',this.value)"/>
+            </div>
+            <div class="img-preview" id="mat-img-preview" style="display:none">
+              <img id="mat-img-preview-img" src="" alt=""/>
+              <span class="img-preview-name" id="mat-img-preview-name"></span>
+              <button class="img-clear" onclick="imgClear('mat')" title="Remove">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addMaterial()">+ ADD MATERIAL</button>
+          <button class="btn btn-ghost" onclick="clearMatForm()">CLEAR</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">STOCK REGISTER</div>
+          <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono)" id="inv-edit-hint">Click qty to edit</span>
+        </div>
+        <div style="padding:16px 20px 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <input id="inv-search" placeholder="Search materials by name, category or unit..." style="flex:1;min-width:180px;" oninput="renderInventoryTable()" />
+          <button class="btn btn-ghost btn-sm" onclick="clearInvSearch()">Clear</button>
+        </div>
+        <div id="inventory-table-wrap">
+          <div class="empty-state"><div class="empty-icon">◈</div>No materials added yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MOTORS ── -->
+    <div class="section" id="sec-motors">
+      <div class="readonly-banner" id="mot-readonly-banner">
+        👁 You are in read-only mode. Only Admin can configure motor types.
+      </div>
+      <div class="card" id="add-motor-card">
+        <div class="card-header"><div class="card-title">DEFINE MOTOR TYPE</div></div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="form-group">
+            <label>Motor Name / Model</label>
+            <input id="mot-name" placeholder="e.g. 5HP 3-Phase Induction Motor"/>
+          </div>
+          <div class="form-group">
+            <label>Power Rating</label>
+            <input id="mot-power" placeholder="e.g. 5 HP / 3.73 kW"/>
+          </div>
+          <div class="form-group">
+            <label>Frame Size</label>
+            <input id="mot-frame" placeholder="e.g. 132M"/>
+          </div>
+        </div>
+        <!-- Image picker (optional) -->
+        <div style="padding:0 20px 8px">
+          <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-family:var(--font-mono)">Motor Image (optional)</label>
+          <div class="img-widget">
+            <div class="img-tabs">
+              <button class="img-tab active" onclick="imgTab('mot','upload')">⬆ Upload</button>
+              <button class="img-tab" onclick="imgTab('mot','url')">🔗 URL</button>
+            </div>
+            <div class="img-pane active" id="mot-pane-upload">
+              <label class="img-file-btn" for="mot-img-file">Choose Image</label>
+              <input type="file" id="mot-img-file" accept="image/*" style="display:none" onchange="imgFile('mot',this)"/>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px;font-family:var(--font-mono)">JPG, PNG, WEBP · Max 5MB</span>
+            </div>
+            <div class="img-pane" id="mot-pane-url">
+              <input type="text" id="mot-img-url" placeholder="https://example.com/photo.jpg" style="width:100%" oninput="imgUrl('mot',this.value)"/>
+            </div>
+            <div class="img-preview" id="mot-img-preview" style="display:none">
+              <img id="mot-img-preview-img" src="" alt=""/>
+              <span class="img-preview-name" id="mot-img-preview-name"></span>
+              <button class="img-clear" onclick="imgClear('mot')" title="Remove">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-header" style="border-top:1px solid var(--border);">
+          <div class="card-title" style="font-size:13px;">BILL OF MATERIALS (per 1 motor)</div>
+          <button class="btn btn-ghost btn-sm" onclick="addBomRow()">+ ADD ROW</button>
+        </div>
+        <div class="bom-list" id="bom-builder">
+          <div style="display:grid;grid-template-columns:1fr 100px 80px 32px;gap:8px;padding:0 0 8px;font-size:10px;color:var(--muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;">
+            <span>Material</span><span>Qty/Motor</span><span>Unit</span><span></span>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveMotor()">SAVE MOTOR TYPE</button>
+          <button class="btn btn-ghost" onclick="clearMotorForm()">CLEAR</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">CONFIGURED MOTOR TYPES</div></div>
+        <div id="motors-list-wrap">
+          <div class="empty-state"><div class="empty-icon">◎</div>No motor types configured yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRODUCTION ── -->
+    <div class="section" id="sec-production">
+      <div class="card">
+        <div class="card-header"><div class="card-title">LOG PRODUCTION RUN</div></div>
+        <div class="produce-form">
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Motor Type — click to select</label>
+              <div id="motor-picker-wrap">
+                <p style="color:var(--muted);font-size:13px;padding:12px 0">No motors configured yet.</p>
+              </div>
+              <input type="hidden" id="prod-motor"/>
+            </div>
+            <div class="form-group">
+              <label>Quantity to Produce</label>
+              <input id="prod-qty" type="number" min="1" placeholder="e.g. 10" oninput="checkFeasibility()"/>
+            </div>
+            <div class="form-group">
+              <label>Invoice / Job Number</label>
+              <input id="prod-invoice" type="text" placeholder="e.g. INV-2026-001" />
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input id="prod-date" type="date"/>
+            </div>
+            <div class="form-group">
+              <label>Customer Name</label>
+              <input id="prod-customer-name" type="text" placeholder="e.g. Acme Corp" />
+            </div>
+            <div class="form-group">
+              <label>Customer Contact</label>
+              <input id="prod-customer-contact" type="text" placeholder="e.g. 541236256" />
+            </div>
+            <div class="form-group">
+              <label>Date Received</label>
+              <input id="prod-received-date" type="date"/>
+            </div>
+            <div class="form-group">
+              <label>Expected Delivery</label>
+              <input id="prod-delivery-date" type="date"/>
+            </div>
+          </div>
+          <div class="feasibility-panel" id="feasibility-panel" style="display:none;">
+            <div class="feasibility-title">📋 MATERIAL FEASIBILITY CHECK</div>
+            <div id="feasibility-rows"></div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;">
+            <button class="btn btn-primary" id="confirm-prod-btn" onclick="logProduction()">▶ CONFIRM PRODUCTION</button>
+            <button class="btn btn-ghost" onclick="clearProdForm()">CLEAR</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">PRODUCTION HISTORY</div></div>
+        <div id="prod-history-wrap">
+          <div class="empty-state"><div class="empty-icon">◉</div>No production runs logged yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MATERIAL PROCESSING ── -->
+    <div class="section" id="sec-process">
+      <div class="card">
+        <div class="card-header"><div class="card-title">PROCESS MATERIALS</div></div>
+        <div class="produce-form">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="form-group" style="grid-column:1/-1">
+              <label>Output Material</label>
+              <select id="process-output" onchange="checkProcessFeasibility(); loadProcessBomBuilder()">
+                <option value="">— Select Output Material —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Quantity to Process</label>
+              <input id="process-qty" type="number" min="0.01" step="0.01" placeholder="e.g. 50" oninput="checkProcessFeasibility()"/>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input id="process-date" type="date"/>
+            </div>
+          </div>
+          <div class="feasibility-panel" id="process-feasibility-panel" style="display:none;">
+            <div class="feasibility-title">📋 PROCESS FEASIBILITY CHECK</div>
+            <div id="process-feasibility-rows"></div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="process-run-btn" onclick="runProcess()">▶ RUN PROCESS</button>
+            <button class="btn btn-ghost" onclick="clearProcessForm()">CLEAR</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">PROCESS BOM DEFINITION</div></div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label>Output Material</label>
+            <select id="bom-output" onchange="loadProcessBomBuilder()">
+              <option value="">— Select Output Material —</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label>Input Materials (per 1 unit output)</label>
+            <div id="process-bom-builder" class="bom-list"></div>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="addProcessBomRow()">+ Add input material</button>
+          </div>
+          <div class="form-actions" style="grid-column:span 2;">
+            <button class="btn btn-primary" onclick="saveProcessBom()">💾 SAVE PROCESS BOM</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">PROCESSING HISTORY</div></div>
+        <div id="process-log-wrap">
+          <div class="empty-state"><div class="empty-icon">⚙</div>No material processing history yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LOG ── -->
+    <div class="section" id="sec-log">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">ACTIVITY LOG</div>
+          <button class="btn btn-ghost btn-sm" id="clear-log-btn" onclick="clearLog()">Clear Log</button>
+        </div>
+        <div id="activity-log">
+          <div class="empty-state"><div class="empty-icon">≡</div>No activity recorded yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ── -->
+    <div class="section" id="sec-reports">
+
+      <!-- 4 report cards -->
+      <div class="report-grid">
+
+        <!-- Stock Register -->
+        <div class="report-card">
+          <div class="report-card-title">📦 Stock Register</div>
+          <div class="report-card-desc">Full list of all raw materials with current stock levels, units, minimum thresholds and status.</div>
+          <div class="report-btn-row">
+            <button class="btn btn-excel btn-sm" onclick="exportExcel('stock')">⬇ Excel</button>
+            <button class="btn btn-pdf   btn-sm" onclick="exportPDF('stock')">⬇ PDF</button>
+          </div>
+        </div>
+
+        <!-- Low Stock Alert -->
+        <div class="report-card" style="border-color:rgba(255,82,82,0.3)">
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:var(--red)"></div>
+          <div class="report-card-title">⚠ Low Stock Alert</div>
+          <div class="report-card-desc">Only items at or below their minimum threshold. Use this to generate a purchase request.</div>
+          <div class="report-btn-row">
+            <button class="btn btn-excel btn-sm" onclick="exportExcel('lowstock')">⬇ Excel</button>
+            <button class="btn btn-pdf   btn-sm" onclick="exportPDF('lowstock')">⬇ PDF</button>
+          </div>
+        </div>
+
+        <!-- Production History -->
+        <div class="report-card">
+          <div class="report-card-title">🏭 Production History</div>
+          <div class="report-card-desc">All production runs with motor type, quantity, date and who logged it. Filter by date range below.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+            <div class="form-group">
+              <label>From Date</label>
+              <input type="date" id="rpt-prod-from"/>
+            </div>
+            <div class="form-group">
+              <label>To Date</label>
+              <input type="date" id="rpt-prod-to"/>
+            </div>
+          </div>
+          <div class="report-btn-row">
+            <button class="btn btn-excel btn-sm" onclick="exportExcel('production')">⬇ Excel</button>
+            <button class="btn btn-pdf   btn-sm" onclick="exportPDF('production')">⬇ PDF</button>
+          </div>
+        </div>
+
+        <!-- Material Consumption -->
+        <div class="report-card">
+          <div class="report-card-title">📊 Material Consumption</div>
+          <div class="report-card-desc">How much of each raw material has been consumed across all production runs. Filter by date range.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+            <div class="form-group">
+              <label>From Date</label>
+              <input type="date" id="rpt-cons-from"/>
+            </div>
+            <div class="form-group">
+              <label>To Date</label>
+              <input type="date" id="rpt-cons-to"/>
+            </div>
+          </div>
+          <div class="report-btn-row">
+            <button class="btn btn-excel btn-sm" onclick="exportExcel('consumption')">⬇ Excel</button>
+            <button class="btn btn-pdf   btn-sm" onclick="exportPDF('consumption')">⬇ PDF</button>
+          </div>
+        </div>
+
+      </div><!-- /report-grid -->
+
+      <!-- Live preview table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="preview-title">SELECT A REPORT TO PREVIEW</div>
+          <span style="font-size:11px;color:var(--muted);font-family:var(--font-mono)" id="preview-count"></span>
+        </div>
+        <div id="report-preview-wrap">
+          <div class="empty-state"><div class="empty-icon">⬢</div>Click any export button above — a preview will appear here before downloading</div>
+        </div>
+      </div>
+
+    </div><!-- /sec-reports -->
+
+    <!-- ── STOCK-IN ── -->
+    <div class="section" id="sec-stockin">
+      <div class="card" id="stockin-form-card">
+        <div class="card-header"><div class="card-title">⬇ RECORD STOCK RECEIVED</div></div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="form-group">
+            <label>Material</label>
+            <select id="si-material">
+              <option value="">— Select Material —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Qty Received</label>
+            <input id="si-qty" type="number" min="0.01" step="0.01" placeholder="e.g. 50"/>
+          </div>
+          <div class="form-group">
+            <label>Date Received</label>
+            <input id="si-date" type="date"/>
+          </div>
+          <div class="form-group">
+            <label>Invoice / PO Number</label>
+            <input id="si-invoice" placeholder="e.g. INV-2024-001"/>
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label>Notes (optional)</label>
+            <input id="si-notes" placeholder="e.g. Partial delivery, balance pending"/>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="submitStockIn()">⬇ RECORD STOCK-IN</button>
+          <button class="btn btn-ghost"   onclick="clearStockInForm()">CLEAR</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">STOCK-IN HISTORY</div>
+          <span id="si-count" style="font-size:12px;color:var(--muted);font-family:var(--font-mono)"></span>
+        </div>
+        <div id="si-history-wrap">
+          <div class="empty-state"><div class="empty-icon">⬇</div>No stock-in entries yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ALERT SETTINGS ── -->
+    <div class="section" id="sec-alerts">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔔 EMAIL ALERT CONFIGURATION</div></div>
+        <div style="padding:20px">
+
+          <!-- Enable toggle -->
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);margin-bottom:20px">
+            <input type="checkbox" id="alert-enabled" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer"/>
+            <label for="alert-enabled" style="font-size:13px;color:var(--text);cursor:pointer;text-transform:none;letter-spacing:0;font-family:var(--font-body)">
+              Enable email alerts for low stock and 45-day payment reminders
+            </label>
+            <span style="font-size:11px;color:var(--muted);font-family:var(--font-mono);margin-left:auto">Immediate (max 1/hr) + Daily summary at 8am</span>
+          </div>
+
+          <!-- Fields -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:680px">
+            <div class="form-group">
+              <label>Gmail Address (sender)</label>
+              <input type="email" id="alert-user" placeholder="yourname@gmail.com"/>
+            </div>
+            <div class="form-group">
+              <label>Gmail App Password</label>
+              <input type="password" id="alert-pass" placeholder="16-character app password"/>
+            </div>
+            <div class="form-group" style="grid-column:span 2">
+              <label>Alert Recipients (comma-separated)</label>
+              <input type="text" id="alert-recipients" placeholder="manager@company.com, admin@company.com"/>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <button class="btn btn-primary" onclick="saveAlertConfig()">💾 SAVE SETTINGS</button>
+            <button class="btn btn-ghost"   onclick="testAlertEmail()">📧 SEND TEST EMAIL</button>
+          </div>
+
+          <div id="alert-msg" style="display:none;margin-top:14px;padding:10px 16px;border-radius:6px;font-size:12px;font-family:var(--font-mono)"></div>
+          <div id="alert-last-sent" style="margin-top:12px;font-size:11px;color:var(--muted);font-family:var(--font-mono)"></div>
+
+          <!-- Gmail setup guide -->
+          <div style="margin-top:28px;padding:18px 20px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);max-width:680px">
+            <div style="font-size:11px;color:var(--accent);font-family:var(--font-mono);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">📖 Gmail App Password Setup Guide</div>
+            <div style="font-size:12px;color:var(--muted);line-height:2.2">
+              1. Sign in to <strong style="color:var(--text)">myaccount.google.com</strong><br>
+              2. Go to <strong style="color:var(--text)">Security</strong> → enable <strong style="color:var(--text)">2-Step Verification</strong> if not already on<br>
+              3. Search <strong style="color:var(--text)">"App passwords"</strong> in the search bar at the top<br>
+              4. App: <strong style="color:var(--text)">Mail</strong> · Device: <strong style="color:var(--text)">Windows Computer</strong> → click <strong style="color:var(--text)">Generate</strong><br>
+              5. Copy the <strong style="color:var(--text)">16-character password</strong> (no spaces) → paste into App Password field above<br>
+              6. Enter the <strong style="color:var(--text)">same Gmail address</strong> you generated the app password for<br>
+              7. Click <strong style="color:var(--text)">Save Settings</strong> → <strong style="color:var(--text)">Send Test Email</strong> to confirm it works
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /sec-alerts -->
+
+    <!-- ════════════ TRANSFORMER MODULE ════════════ -->
+
+    <!-- ── TRF: JOB REGISTER ── -->
+    <div class="section" id="sec-trf-jobs">
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+        <input id="trf-search" placeholder="Search by job no. or customer..." style="flex:1;min-width:200px" oninput="renderTrfJobList()"/>
+        <select id="trf-filter-status" onchange="renderTrfJobList()">
+          <option value="">All Statuses</option>
+          <option value="Received">Received</option>
+          <option value="In Repair">In Repair</option>
+          <option value="Testing">Testing</option>
+          <option value="Dispatched">Dispatched</option>
+        </select>
+        <button class="btn btn-primary" onclick="showSection('trf-newjob')">+ NEW JOB</button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ TRANSFORMER REPAIR JOBS</div>
+          <span id="trf-job-count" style="font-size:12px;color:var(--muted);font-family:var(--font-mono)"></span>
+        </div>
+        <div id="trf-jobs-wrap">
+          <div class="empty-state"><div class="empty-icon">⚡</div>No jobs yet — click + NEW JOB to create one</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TRF: NEW JOB ── -->
+    <div class="section" id="sec-trf-newjob">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ NEW TRANSFORMER JOB</div>
+          <button class="btn btn-ghost btn-sm" onclick="showSection('trf-jobs')">← Back to Jobs</button>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="form-group">
+            <label>Customer Name</label>
+            <input id="trf-customer-name" placeholder="e.g. ABC Industries"/>
+          </div>
+          <div class="form-group">
+            <label>Customer Contact</label>
+            <input id="trf-customer-contact" placeholder="Phone or email"/>
+          </div>
+          <div class="form-group">
+            <label>KVA Rating</label>
+            <input id="trf-kva" placeholder="e.g. 100 KVA"/>
+          </div>
+          <div class="form-group">
+            <label>Date Received</label>
+            <input type="date" id="trf-received-date"/>
+          </div>
+          <div class="form-group">
+            <label>Expected Delivery</label>
+            <input type="date" id="trf-expected-date"/>
+          </div>
+          <div class="form-group" style="grid-column:span 3">
+            <label>Fault Description (from customer)</label>
+            <textarea id="trf-fault" rows="3" placeholder="Describe the fault reported by the customer..." style="resize:vertical"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="createTrfJob()">⚡ CREATE JOB</button>
+          <button class="btn btn-ghost" onclick="clearTrfNewJobForm()">CLEAR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TRF: JOB DETAIL ── -->
+    <div class="section" id="sec-trf-detail">
+      <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="showSection('trf-jobs')">← Back to Jobs</button>
+        <span id="trf-detail-jobno" style="font-family:var(--font-mono);font-size:13px;color:var(--accent)"></span>
+      </div>
+
+      <!-- Job info card -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div class="card-title" id="trf-detail-title">JOB DETAILS</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="trf-status-select" onchange="updateTrfStatus()" style="font-size:12px;padding:5px 10px">
+              <option value="Received">Received</option>
+              <option value="In Repair">In Repair</option>
+              <option value="Testing">Testing</option>
+              <option value="Dispatched">Dispatched</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:20px">
+          <div class="form-group">
+            <label>Customer Name</label>
+            <input id="trf-edit-customer-name" placeholder="Customer Name"/>
+          </div>
+          <div class="form-group">
+            <label>Customer Contact</label>
+            <input id="trf-edit-customer-contact" placeholder="Phone or email"/>
+          </div>
+          <div class="form-group">
+            <label>KVA Rating</label>
+            <input id="trf-edit-kva" placeholder="e.g. 100 KVA"/>
+          </div>
+          <div class="form-group">
+            <label>Date Received</label>
+            <input type="date" id="trf-edit-received-date"/>
+          </div>
+          <div class="form-group">
+            <label>Expected Delivery</label>
+            <input type="date" id="trf-edit-expected-date"/>
+          </div>
+          <div class="form-group" style="grid-column:span 3">
+            <label>Fault Description</label>
+            <textarea id="trf-edit-fault" rows="2" style="resize:vertical"></textarea>
+          </div>
+          <div class="form-group" style="grid-column:span 3">
+            <label>Repair Work Done</label>
+            <textarea id="trf-edit-repair" rows="3" placeholder="Describe all repair work carried out..." style="resize:vertical"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveTrfJobEdits()">💾 SAVE CHANGES</button>
+        </div>
+      </div>
+
+      <!-- Materials used -->
+      <div class="card" style="margin-bottom:24px;overflow:visible;">
+        <div class="card-header" style="padding:22px 28px;">
+          <div class="card-title" style="font-size:20px;letter-spacing:2px;">◈ MATERIALS USED</div>
+          <span id="trf-materials-total" style="font-size:14px;color:var(--muted);font-family:var(--font-mono)"></span>
+        </div>
+
+        <!-- Table or empty state -->
+        <div id="trf-materials-wrap" style="min-height:160px;">
+          <div class="empty-state" style="padding:60px 20px;font-size:15px;">
+            <div class="empty-icon" style="font-size:48px;margin-bottom:12px;">◈</div>
+            No materials added yet — use the form below
+          </div>
+        </div>
+
+        <!-- ── Add material row ── -->
+        <div id="trf-add-mat-row"
+          style="display:grid;grid-template-columns:1fr 140px 110px 150px 130px;gap:16px;
+                 padding:24px 28px;border-top:2px solid var(--accent);
+                 background:var(--surface2);border-radius:0 0 10px 10px;overflow:visible;">
+
+          <!-- Searchable material picker -->
+          <div style="position:relative;display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:11px;letter-spacing:2px;">Material / Search Inventory</label>
+            <input id="trf-mat-name" placeholder="Type to search inventory or enter custom name…"
+              autocomplete="off"
+              style="width:100%;padding:16px 18px;font-size:16px;border-radius:8px;"
+              oninput="trfMatSearch(this.value)"
+              onfocus="trfMatSearchOpen()"/>
+
+            <!-- Dropdown rendered at fixed position to escape overflow:hidden on any ancestor -->
+            <div id="trf-mat-dropdown"
+              style="display:none;position:fixed;background:var(--surface);
+                     border:2px solid var(--accent);border-radius:10px;z-index:9999;
+                     max-height:320px;overflow-y:auto;
+                     box-shadow:0 24px 60px rgba(0,0,0,0.8);">
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:11px;letter-spacing:2px;">Qty Used</label>
+            <input id="trf-mat-qty" type="number" placeholder="0" min="0" step="0.01"
+              style="width:100%;padding:16px 18px;font-size:16px;border-radius:8px;"/>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:11px;letter-spacing:2px;">Unit</label>
+            <input id="trf-mat-unit" placeholder="kg / pcs / m…"
+              style="width:100%;padding:16px 18px;font-size:16px;border-radius:8px;"/>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:11px;letter-spacing:2px;">Cost ₹ / Unit</label>
+            <input id="trf-mat-cost" type="number" placeholder="0.00" min="0" step="0.01"
+              style="width:100%;padding:16px 18px;font-size:16px;border-radius:8px;"/>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="font-size:11px;letter-spacing:2px;color:transparent;">ADD</label>
+            <button class="btn btn-primary"
+              style="width:100%;padding:16px 24px;font-size:16px;letter-spacing:2px;border-radius:8px;"
+              onclick="addTrfMaterial()">+ ADD</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Billing -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">BILLING</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:20px">
+          <div class="form-group">
+            <label>Labour Charge (₹)</label>
+            <input id="trf-labour" type="number" min="0" step="0.01" placeholder="0.00"/>
+          </div>
+          <div class="form-group">
+            <label>Materials Cost (₹)</label>
+            <input id="trf-mat-total" readonly style="opacity:0.6" placeholder="Auto-calculated"/>
+          </div>
+          <div class="form-group">
+            <label>Total Amount (₹)</label>
+            <input id="trf-total" readonly style="opacity:0.6;font-weight:700;color:var(--accent)" placeholder="Auto-calculated"/>
+          </div>
+          <div class="form-group">
+            <label>Payment Status</label>
+            <select id="trf-payment-status">
+              <option value="Pending">Pending</option>
+              <option value="Received">Received</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveTrfBilling()">💾 SAVE BILLING</button>
+        </div>
+      </div>
+
+      <!-- Test Result Files -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">TEST RESULT FILES</div>
+          <label class="btn btn-ghost btn-sm" for="trf-file-input" style="cursor:pointer">⬆ Upload File</label>
+          <input type="file" id="trf-file-input" style="display:none"
+            accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt,.jpg,.jpeg,.png"
+            onchange="uploadTrfFile(this)"/>
+        </div>
+        <div id="trf-files-wrap">
+          <div class="empty-state"><div class="empty-icon">📄</div>No files uploaded yet</div>
+        </div>
+        <div style="padding:12px 20px;font-size:11px;color:var(--muted);font-family:var(--font-mono);border-top:1px solid var(--border)">
+          Accepted: PDF, Excel, Word, CSV, Images · Max 20MB per file
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ════════════════════════════════════════════════════
+// SESSION & AUTH
+// ════════════════════════════════════════════════════
+let currentSession = null; // { token, role, label }
+
+// Role permissions
+const ROLE_CONFIG = {
+  admin:       { nav:['dashboard','inventory','stockin','motors','production','process','log','reports','alerts','trf-jobs','trf-newjob','trf-detail'], canEdit:true,  canProduce:true,  canAddMotor:true,  canClearLog:true,  canStockIn:true,  canTrf:true,  modules:['motor','transformer'] },
+  store:       { nav:['dashboard','inventory','stockin','log','reports'],                                                                     canEdit:true,  canProduce:false, canAddMotor:false, canClearLog:false, canStockIn:true,  canTrf:false, modules:['motor'] },
+  production:  { nav:['dashboard','inventory','production','process','log','reports'],                                                                  canEdit:false, canProduce:true,  canAddMotor:false, canClearLog:false, canStockIn:false, canTrf:false, modules:['motor'] },
+  viewer:      { nav:['dashboard','inventory','log','reports'],                                                                               canEdit:false, canProduce:false, canAddMotor:false, canClearLog:false, canStockIn:false, canTrf:false, modules:['motor'] },
+  transformer: { nav:['trf-jobs','trf-newjob','trf-detail'],                                                                                 canEdit:false, canProduce:false, canAddMotor:false, canClearLog:false, canStockIn:false, canTrf:true,  modules:['transformer'] },
+};
+
+// Track active module
+let activeModule = 'motor';
+
+async function doLogin() {
+  const role     = document.getElementById('login-role').value;
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!role)     { showLoginError('Please select a role.'); return; }
+  if (!password) { showLoginError('Please enter the password.'); return; }
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, password })
+    });
+    const data = await readApiJson(res);
+    if (!res.ok) { showLoginError(data.error || 'Login failed'); return; }
+
+    currentSession = { token: data.token, role: data.role, label: data.label };
+    document.getElementById('login-screen').style.display = 'none';
+    showModuleSelector();
+
+  } catch(e) {
+    const demoPasswords = { admin:'admin123', store:'store123', production:'prod123', viewer:'view123', transformer:'trf123' };
+    const demoLabels    = { admin:'Admin', store:'Store Manager', production:'Production Supervisor', viewer:'Viewer', transformer:'Transformer Manager' };
+    if (demoPasswords[role] === password) {
+      currentSession = { token: 'offline', role, label: demoLabels[role] };
+      document.getElementById('login-screen').style.display = 'none';
+      showModuleSelector();
+    } else {
+      showLoginError('Incorrect password.');
+    }
+  }
+}
+
+function showModuleSelector() {
+  const cfg = ROLE_CONFIG[currentSession.role];
+  // If only one module available, skip selector and go straight in
+  if (cfg.modules.length === 1) {
+    selectModule(cfg.modules[0]);
+    return;
+  }
+  // Show/hide module buttons based on role
+  document.getElementById('mod-btn-motor').style.display       = cfg.modules.includes('motor')       ? 'flex' : 'none';
+  document.getElementById('mod-btn-transformer').style.display = cfg.modules.includes('transformer') ? 'flex' : 'none';
+  document.getElementById('module-selector').classList.add('open');
+}
+
+function selectModule(module) {
+  document.getElementById('module-selector').classList.remove('open');
+  activeModule = module;
+  applyRoleUI();
+  if (module === 'motor') {
+    loadData().then(() => renderDashboard());
+  } else {
+    // Load inventory data so the materials dropdown is populated,
+    // then load transformer jobs in parallel
+    loadData();
+    loadTrfJobs();
+    showSection('trf-jobs');
+  }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function doLogout() {
+  if (currentSession && currentSession.token !== 'offline') {
+    await fetch('/api/logout', {
+      method: 'POST',
+      headers: { 'x-session-token': currentSession.token }
+    }).catch(()=>{});
+  }
+  currentSession = null;
+  _bannerDismissed = false;
+  document.getElementById('login-role').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  // Reset state
+  state = { materials:[], motors:[], productions:[], log:[], nextId:1 };
+  toast('Logged out', 'info');
+}
+
+// ── Apply role-based UI after login ──
+function applyRoleUI() {
+  const { role, label } = currentSession;
+  const cfg = ROLE_CONFIG[role];
+
+  // Topbar user pill
+  document.getElementById('user-label').textContent = label;
+  const badge = document.getElementById('user-role-badge');
+  badge.className = `role-badge role-${role === 'transformer' ? 'production' : role}`;
+  badge.textContent = role.toUpperCase();
+
+  // Sidebar footer — show which module is active
+  document.getElementById('sidebar-footer').textContent =
+    `${label} · ${activeModule === 'transformer' ? '⚡ Transformer' : '⚙ Motor'}`;
+
+  // Show/hide nav items based on active module
+  const allNavIds = ['dashboard','inventory','stockin','motors','production','process','log','reports','alerts','trf-jobs','trf-newjob'];
+  allNavIds.forEach(id => {    const el = document.getElementById('nav-' + id);
+    if (!el) return;
+    const isTrf    = id.startsWith('trf-');
+    const inModule = activeModule === 'transformer' ? isTrf : !isTrf;
+    if (inModule && cfg.nav.includes(id)) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  });
+
+  // Default landing section based on module
+  if (activeModule === 'transformer') {
+    showSection('trf-jobs');
+  } else {
+    showSection('dashboard');
+  }
+}
+
+function handleUserPillClick() {
+  if (!currentSession) return;
+  if (currentSession.role === 'admin') {
+    // Admin: show options — change passwords or logout
+    const choice = confirm('Click OK to manage passwords, Cancel to log out.');
+    if (choice) openPwdModal();
+    else doLogout();
+  } else {
+    if (confirm('Log out?')) doLogout();
+  }
+}
+
+// ── Password management (admin only) ──
+function openPwdModal() {
+  const roles = [
+    { key:'admin',       label:'Admin' },
+    { key:'store',       label:'Store Manager' },
+    { key:'production',  label:'Production Supervisor' },
+    { key:'transformer', label:'Transformer Manager' },
+    { key:'viewer',      label:'Viewer' },
+  ];
+  document.getElementById('pwd-rows').innerHTML = roles.map(r => `
+    <div class="modal-row">
+      <span style="font-size:12px;font-family:var(--font-mono);color:var(--muted)">${r.label}</span>
+      <input type="password" id="pwd-${r.key}" placeholder="New password (min 5 chars)" />
+      <button class="btn btn-primary btn-sm" onclick="changePassword('${r.key}')">SET</button>
+    </div>
+  `).join('');
+  document.getElementById('pwd-modal').classList.add('open');
+}
+
+function closePwdModal() {
+  document.getElementById('pwd-modal').classList.remove('open');
+}
+
+async function changePassword(role) {
+  const newPwd = document.getElementById('pwd-' + role).value.trim();
+  if (newPwd.length < 5) { toast('Password must be at least 5 characters', 'error'); return; }
+  try {
+    const res = await fetch('/api/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify({ role, newPassword: newPwd })
+    });
+    const data = await readApiJson(res);
+    if (res.ok) {
+      toast(`✓ Password updated for ${role}`, 'success');
+      document.getElementById('pwd-' + role).value = '';
+    } else {
+      toast(data.error || 'Failed', 'error');
+    }
+  } catch(e) {
+    toast('Server not reachable', 'error');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let state = { materials:[], motors:[], productions:[], log:[], processBom:[], processLog:[], nextId:1 };
+let _bannerDismissed = false; // resets on every login
+let expandedMaterialId = null;
+
+function toggleMaterialDetails(id) {
+  expandedMaterialId = expandedMaterialId === id ? null : id;
+  renderInventoryTable();
+}
+
+function cancelMaterialEdit() {
+  expandedMaterialId = null;
+  renderInventoryTable();
+}
+
+function saveMaterialEdit(id) {
+  const mat = state.materials.find(m => m.id === id);
+  if (!mat) return;
+  const qtyInput = document.getElementById(`edit-qty-${id}`);
+  const minInput = document.getElementById(`edit-min-${id}`);
+  const typeSelect = document.getElementById(`edit-type-${id}`);
+  const reasonInput = document.getElementById(`edit-reason-${id}`);
+  const newQty = parseFloat(qtyInput.value) || 0;
+  const newMin = parseFloat(minInput.value) || 0;
+  const newType = typeSelect.value;
+  const reason = reasonInput.value.trim();
+  if (newQty === mat.qty && newMin === mat.min && newType === mat.type) {
+    toast('No changes detected', 'info');
+    return;
+  }
+  const changes = [];
+  if (newQty !== mat.qty) changes.push(`stock ${mat.qty}→${newQty} ${mat.unit}`);
+  if (newMin !== mat.min) changes.push(`min ${mat.min}→${newMin}`);
+  if (newType !== mat.type) changes.push(`type ${mat.type}→${newType}`);
+  mat.qty = newQty;
+  mat.min = newMin;
+  mat.type = newType;
+  const reasonSuffix = reason ? ` — reason: ${reason}` : '';
+  addLog('restock', `Updated ${mat.name}: ${changes.join(', ')}${reasonSuffix}`);
+  autosave();
+  expandedMaterialId = null;
+  renderInventoryTable();
+  renderDashboard();
+}
+
+function dismissLowStockBanner() {
+  _bannerDismissed = true;
+  document.getElementById('low-stock-banner').classList.remove('visible');
+}
+
+function uid() { return state.nextId++; }
+function ts()  { return new Date().toLocaleString('en-IN'); }
+
+function addLog(type, msg) {
+  const who = currentSession ? currentSession.label : 'System';
+  state.log.unshift({ ts:ts(), type, msg, by:who });
+  renderLog();
+}
+
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ════════════════════════════════════════════════════
+// IMAGE HELPERS
+// ════════════════════════════════════════════════════
+const _pendingImg = { mat:'', mot:'' };
+
+function imgTab(prefix, tab) {
+  ['upload','url'].forEach(t => {
+    document.getElementById(`${prefix}-pane-${t}`).classList.toggle('active', t===tab);
+  });
+  document.querySelectorAll(`#${prefix}-pane-upload`).forEach(() => {});
+  // Toggle tab button styles
+  const widget = document.getElementById(`${prefix}-pane-upload`).closest('.img-widget');
+  widget.querySelectorAll('.img-tab').forEach((btn,i) => {
+    btn.classList.toggle('active', (i===0 && tab==='upload') || (i===1 && tab==='url'));
+  });
+}
+
+function _showImgPreview(prefix, url, name) {
+  _pendingImg[prefix] = url;
+  const wrap = document.getElementById(`${prefix}-img-preview`);
+  wrap.style.display = 'flex';
+  document.getElementById(`${prefix}-img-preview-img`).src = url;
+  document.getElementById(`${prefix}-img-preview-name`).textContent = name || url;
+}
+
+function imgClear(prefix) {
+  _pendingImg[prefix] = '';
+  document.getElementById(`${prefix}-img-preview`).style.display = 'none';
+  document.getElementById(`${prefix}-img-preview-img`).src = '';
+  const urlEl = document.getElementById(`${prefix}-img-url`);
+  const fileEl = document.getElementById(`${prefix}-img-file`);
+  if (urlEl) urlEl.value = '';
+  if (fileEl) fileEl.value = '';
+}
+
+function imgUrl(prefix, url) {
+  if (url && url.startsWith('http')) {
+    _showImgPreview(prefix, url, url.split('/').pop().split('?')[0]);
+  } else {
+    _pendingImg[prefix] = '';
+    document.getElementById(`${prefix}-img-preview`).style.display = 'none';
+  }
+}
+
+async function imgFile(prefix, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) { toast('Image too large — max 5MB', 'error'); return; }
+  if (!currentSession || currentSession.token === 'offline') {
+    _showImgPreview(prefix, URL.createObjectURL(file), file.name);
+    toast('⚠ Offline — image preview only, will not be saved', 'info');
+    return;
+  }
+  toast('Uploading...', 'info');
+  try {
+    const type = prefix === 'mot' ? 'motor' : 'material';
+    const fd = new FormData();
+    fd.append('image', file);
+    const res  = await fetch(`/api/upload?type=${type}`, {
+      method: 'POST',
+      headers: { 'x-session-token': currentSession.token },
+      body: fd
+    });
+    const data = await readApiJson(res);
+    if (res.ok && data.url) {
+      _showImgPreview(prefix, data.url, file.name);
+      toast('✓ Image uploaded', 'success');
+    } else {
+      toast(data.error || 'Upload failed', 'error');
+    }
+  } catch(e) {
+    toast('Upload failed', 'error');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════
+const pageMeta = {
+  dashboard:   ['DASHBOARD',        'Overview of all stock & production activity'],
+  inventory:   ['RAW MATERIALS',    'Manage stock of all raw materials'],
+  stockin:     ['STOCK-IN',         'Record incoming materials with invoice details'],
+  motors:      ['MOTOR TYPES',      'Configure motor models and their bill of materials'],
+  production:  ['PRODUCTION ENTRY', 'Log production runs and auto-deduct stock'],
+  process:     ['MATERIAL PROCESSING', 'Process raw materials into semi-finished goods'],
+  log:         ['ACTIVITY LOG',     'Full audit trail of all changes'],
+  reports:     ['REPORTS',          'Export stock and production data to Excel or PDF'],
+  alerts:      ['ALERT SETTINGS',   'Configure email alerts for low stock — Admin only'],
+  'trf-jobs':    ['JOB REGISTER',   '⚡ All transformer repair jobs'],
+  'trf-newjob':  ['NEW JOB',        '⚡ Create a new transformer repair job'],
+  'trf-detail':  ['JOB DETAIL',     '⚡ View and edit transformer repair job'],
+};
+
+function showSection(id) {
+  const cfg = currentSession ? ROLE_CONFIG[currentSession.role] : null;
+  if (cfg && !cfg.nav.includes(id)) return;
+
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('sec-' + id);
+  if (sec) sec.classList.add('active');
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  const meta = pageMeta[id] || [id.toUpperCase(), ''];
+  document.getElementById('pageTitle').textContent = meta[0];
+  document.getElementById('pageSubtitle').textContent = meta[1];
+
+  if (id === 'dashboard')   renderDashboard();
+  if (id === 'inventory')   { applyInventoryRole(); renderInventoryTable(); }
+  if (id === 'stockin')     { populateStockInMaterials(); loadStockInHistory(); }
+  if (id === 'motors')      { applyMotorsRole(); renderMotorList(); populateBomMaterials(); }
+  if (id === 'production')  { populateProdMotors(); renderProdHistory(); }
+  if (id === 'process')     { loadProcessData(); renderProcessLog(); }
+  if (id === 'log')         renderLog();
+  if (id === 'reports')     initReportsSection();
+  if (id === 'alerts')      loadAlertConfig();
+  if (id === 'trf-jobs')    loadTrfJobs();
+  if (id === 'trf-newjob')  initTrfNewJobForm();
+}
+
+
+// ── Apply role restrictions to inventory section ──
+function applyInventoryRole() {
+  const cfg = currentSession ? ROLE_CONFIG[currentSession.role] : { canEdit:false };
+  document.getElementById('add-material-card').style.display   = cfg.canEdit ? 'block' : 'none';
+  document.getElementById('inv-readonly-banner').style.display = cfg.canEdit ? 'none'  : 'block';
+  document.getElementById('inv-edit-hint').style.display       = cfg.canEdit ? 'inline': 'none';
+}
+
+// ── Apply role restrictions to motors section ──
+function applyMotorsRole() {
+  const cfg = currentSession ? ROLE_CONFIG[currentSession.role] : { canAddMotor:false };
+  document.getElementById('add-motor-card').style.display    = cfg.canAddMotor ? 'block' : 'none';
+  document.getElementById('mot-readonly-banner').style.display = cfg.canAddMotor ? 'none' : 'block';
+}
+
+// ════════════════════════════════════════════════════
+// PERSISTENCE
+// ════════════════════════════════════════════════════
+async function autosave() {
+  if (!currentSession || currentSession.token === 'offline') return;
+  try {
+    await fetch('/api/data', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify(state)
+    });
+    showSaveIndicator();
+  } catch(e) { console.warn('Autosave failed', e); }
+}
+
+function showSaveIndicator() {
+  const el = document.getElementById('save-indicator');
+  if (!el) return;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.opacity = '0', 1800);
+}
+
+async function loadData() {
+  if (!currentSession || currentSession.token === 'offline') return;
+  try {
+    const res = await fetch('/api/data', {
+      headers: { 'x-session-token': currentSession.token }
+    });
+    if (res.status === 401) { doLogout(); return; }
+    const saved = await res.json();
+    if (saved && saved.materials) {
+      state = saved;
+      state.materials = state.materials.map(m => ({ ...m, type: m.type || 'raw' }));
+      toast('✓ Data loaded', 'info');
+    } else {
+      loadSampleData();
+    }
+  } catch(e) {
+    toast('Could not load data from server', 'error');
+    loadSampleData();
+  }
+  renderDashboard();
+}
+
+// ════════════════════════════════════════════════════
+// INVENTORY
+// ════════════════════════════════════════════════════
+function addMaterial() {
+  const name  = document.getElementById('mat-name').value.trim();
+  const unit  = document.getElementById('mat-unit').value;
+  const type  = document.getElementById('mat-type').value;
+  const qty   = parseFloat(document.getElementById('mat-qty').value) || 0;
+  const min   = parseFloat(document.getElementById('mat-min').value) || 0;
+  const cat   = document.getElementById('mat-cat').value;
+  const image = _pendingImg.mat || '';
+  if (!name) { toast('Enter a material name', 'error'); return; }
+  state.materials.push({ id:uid(), name, unit, type, qty, min, category:cat, image });
+  addLog('add', `Added material: ${name} (${qty} ${unit})`);
+  toast(`✓ ${name} added`);
+  autosave();
+  clearMatForm();
+  renderInventoryTable();
+  renderDashboard();
+}
+
+function clearMatForm() {
+  ['mat-name','mat-qty','mat-min'].forEach(i => document.getElementById(i).value = '');
+  document.getElementById('mat-type').value = 'raw';
+  imgClear('mat');
+}
+
+function deleteMaterial(id) {
+  const mat = state.materials.find(m => m.id === id);
+  state.materials = state.materials.filter(m => m.id !== id);
+  addLog('add', `Removed material: ${mat?.name}`);
+  toast(`Removed ${mat?.name}`, 'info');
+  autosave();
+  renderInventoryTable();
+  renderDashboard();
+}
+
+function updateQty(id, newQty) {
+  const mat = state.materials.find(m => m.id === id);
+  if (!mat) return;
+  const old = mat.qty;
+  mat.qty = Math.max(0, Math.round(newQty * 1000) / 1000);
+  addLog('restock', `Updated ${mat.name}: ${old} → ${mat.qty} ${mat.unit}`);
+  autosave();
+  renderDashboard();
+}
+
+function renderInventoryTable() {
+  const wrap = document.getElementById('inventory-table-wrap');
+  const canEdit = currentSession && ROLE_CONFIG[currentSession.role].canEdit;
+  document.getElementById('inv-edit-hint').textContent = canEdit
+    ? 'Click EDIT to change stock/min and provide a reason for the update.'
+    : 'Read-only view.';
+  const search = (document.getElementById('inv-search')?.value || '').trim().toLowerCase();
+  let materials = [...state.materials];
+  if (search) {
+    materials = materials.filter(m =>
+      m.name.toLowerCase().includes(search) ||
+      m.category.toLowerCase().includes(search) ||
+      m.unit.toLowerCase().includes(search)
+    );
+  }
+  if (!materials.length) {
+    const msg = state.materials.length
+      ? 'No materials match your search.'
+      : 'No materials added yet';
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">◈</div>${msg}</div>`;
+    return;
+  }
+  const rows = materials.map(m => {
+    const pct = m.min > 0 ? Math.min(100, (m.qty / m.min) * 100) : (m.qty > 0 ? 100 : 0);
+    const col = m.qty === 0 ? 'var(--red)' : m.qty <= m.min ? 'var(--red)' : m.qty <= m.min * 2 ? 'var(--yellow)' : 'var(--green)';
+    const badge = m.qty === 0 ? 'badge-low' : m.qty <= m.min ? 'badge-low' : m.qty <= m.min * 2 ? 'badge-warn' : 'badge-ok';
+    const badgeText = m.qty === 0 ? 'OUT' : m.qty <= m.min ? 'LOW' : m.qty <= m.min * 2 ? 'OK' : 'GOOD';
+    const qtyCell = `<span style="font-family:var(--font-mono);font-size:13px;">${m.qty}</span>`;
+    const editBtn = canEdit
+      ? `<button class="btn btn-ghost btn-sm" onclick="toggleMaterialDetails(${m.id})">
+           ${expandedMaterialId === m.id ? 'Close' : 'Edit'}
+         </button>`
+      : `<span style="color:var(--muted);font-size:11px">—</span>`;
+    const deleteBtn = canEdit
+      ? `<button class="btn btn-danger btn-sm" onclick="deleteMaterial(${m.id})">✕</button>`
+      : `<span style="color:var(--muted);font-size:11px">—</span>`;
+    const detailRow = expandedMaterialId === m.id
+      ? `<tr class="expanded-row">
+          <td colspan="8">
+            <div class="expanded-panel">
+              <div class="edit-grid">
+                <div class="form-group">
+                  <label>Current Stock</label>
+                  <input id="edit-qty-${m.id}" type="number" min="0" value="${m.qty}" />
+                </div>
+                <div class="form-group">
+                  <label>Min. Threshold</label>
+                  <input id="edit-min-${m.id}" type="number" min="0" value="${m.min}" />
+                </div>
+                <div class="form-group">
+                  <label>Material Type</label>
+                  <select id="edit-type-${m.id}">
+                    <option value="raw" ${m.type === 'raw' ? 'selected' : ''}>Raw</option>
+                    <option value="processed" ${m.type === 'processed' ? 'selected' : ''}>Processed</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="grid-column:span 2">
+                <label>Reason for edit (optional)</label>
+                <textarea id="edit-reason-${m.id}" placeholder="Describe the change for audit log"></textarea>
+              </div>
+              <div class="edit-actions">
+                <button class="btn btn-primary" onclick="saveMaterialEdit(${m.id})">Save changes</button>
+                <button class="btn btn-ghost" onclick="cancelMaterialEdit()">Cancel</button>
+              </div>
+            </div>
+          </td>
+        </tr>`
+      : '';
+    return `<tr>
+      <td style="width:48px;padding:8px 8px 8px 16px">${m.image ? `<img class="img-thumb" src="${m.image}" onerror="this.style.display='none'">` : ''}</td>
+      <td><strong>${m.name}</strong></td>
+      <td><span style="font-size:10px;color:var(--muted)">${m.category}</span></td>
+      <td>
+        <div class="qty-bar-wrap">
+          ${qtyCell}
+          <div class="qty-bar"><div class="qty-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+        </div>
+      </td>
+      <td style="font-family:var(--font-mono)">${m.unit}</td>
+      <td style="font-family:var(--font-mono);color:var(--muted)">${m.min}</td>
+      <td><span class="badge ${badge}">${badgeText}</span></td>
+      <td style="display:flex;gap:8px;justify-content:flex-end">${editBtn}${deleteBtn}</td>
+    </tr>${detailRow}`;
+  }).join('');
+  wrap.innerHTML = `<table>
+    <thead><tr><th></th><th>Name</th><th>Category</th><th>Stock</th><th>Unit</th><th>Min</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function clearInvSearch() {
+  const input = document.getElementById('inv-search');
+  if (!input) return;
+  input.value = '';
+  renderInventoryTable();
+}
+
+// ════════════════════════════════════════════════════
+// MOTORS
+// ════════════════════════════════════════════════════
+function populateBomMaterials() {
+  document.querySelectorAll('.bom-mat-select').forEach(sel => {
+    const val = sel.value;
+    sel.innerHTML = `<option value="">— Select Material —</option>` +
+      state.materials.map(m => `<option value="${m.id}" ${m.id == val ? 'selected' : ''}>${m.name} (${m.unit})</option>`).join('');
+  });
+}
+
+function addBomRow() {
+  const row = document.createElement('div');
+  row.className = 'bom-row';
+  row.innerHTML = `
+    <select class="bom-mat-select">
+      <option value="">— Select Material —</option>
+      ${state.materials.map(m => `<option value="${m.id}">${m.name} (${m.unit})</option>`).join('')}
+    </select>
+    <input type="number" class="bom-qty" placeholder="Qty" min="0.01" step="0.01"/>
+    <span class="bom-unit" style="font-size:11px;color:var(--muted);font-family:var(--font-mono);padding:8px 4px;">unit</span>
+    <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>
+  `;
+  row.querySelector('.bom-mat-select').addEventListener('change', function() {
+    const mat = state.materials.find(m => m.id == this.value);
+    row.querySelector('.bom-unit').textContent = mat ? mat.unit : 'unit';
+  });
+  document.getElementById('bom-builder').appendChild(row);
+}
+
+function saveMotor() {
+  const name  = document.getElementById('mot-name').value.trim();
+  const power = document.getElementById('mot-power').value.trim();
+  const frame = document.getElementById('mot-frame').value.trim();
+  const image = _pendingImg.mot || '';
+  if (!name) { toast('Enter a motor name', 'error'); return; }
+  const bom = [];
+  document.querySelectorAll('.bom-row').forEach(row => {
+    const mid = row.querySelector('.bom-mat-select').value;
+    const qty = parseFloat(row.querySelector('.bom-qty').value);
+    if (mid && qty) bom.push({ materialId: parseInt(mid), qtyPer: qty });
+  });
+  if (!bom.length) { toast('Add at least one BOM row', 'error'); return; }
+  state.motors.push({ id:uid(), name, power, frame, image, bom });
+  addLog('add', `Defined motor: ${name} with ${bom.length} BOM items`);
+  toast(`✓ ${name} saved`);
+  autosave();
+  clearMotorForm();
+  renderMotorList();
+  populateProdMotors();
+}
+
+function clearMotorForm() {
+  document.getElementById('mot-name').value = '';
+  document.getElementById('mot-power').value = '';
+  document.getElementById('mot-frame').value = '';
+  document.getElementById('bom-builder').querySelectorAll('.bom-row').forEach(r => r.remove());
+  imgClear('mot');
+}
+
+function deleteMotor(id) {
+  const m = state.motors.find(x => x.id === id);
+  state.motors = state.motors.filter(x => x.id !== id);
+  addLog('add', `Deleted motor: ${m?.name}`);
+  toast(`Removed ${m?.name}`, 'info');
+  autosave();
+  renderMotorList();
+  populateProdMotors();
+}
+
+function renderMotorList() {
+  const wrap = document.getElementById('motors-list-wrap');
+  const canAdmin = currentSession && ROLE_CONFIG[currentSession.role].canAddMotor;
+  if (!state.motors.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div>No motor types yet</div>';
+    return;
+  }
+  wrap.innerHTML = state.motors.map(m => {
+    const bomHtml = m.bom.map(b => {
+      const mat = state.materials.find(x => x.id === b.materialId);
+      return `<span style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:11px;font-family:var(--font-mono);margin-right:4px;">${mat ? mat.name : '?'} × ${b.qtyPer}</span>`;
+    }).join('');
+    const delBtn = canAdmin ? `<button class="btn btn-danger btn-sm" onclick="deleteMotor(${m.id})">✕</button>` : '';
+    const imgHtml = m.image ? `<img class="img-motor" src="${m.image}" onerror="this.style.display='none'" style="margin-right:16px;flex-shrink:0">` : '';
+    return `<div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="display:flex;align-items:flex-start;gap:0">
+          ${imgHtml}
+          <div>
+            <strong style="font-family:var(--font-display);letter-spacing:1px">${m.name}</strong>
+            <span style="font-size:11px;color:var(--muted);margin-left:10px;font-family:var(--font-mono)">${m.power || ''} ${m.frame ? '· ' + m.frame : ''}</span>
+            <div style="margin-top:8px">${bomHtml}</div>
+          </div>
+        </div>
+        ${delBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════
+// PRODUCTION
+// ════════════════════════════════════════════════════
+function populateProdMotors() {
+  const wrap = document.getElementById('motor-picker-wrap');
+  if (!wrap) return;
+  if (!state.motors.length) {
+    wrap.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:12px 0">No motors configured yet. Add motors first.</p>';
+    document.getElementById('prod-motor').value = '';
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'motor-picker';
+  state.motors.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'mpc';
+    card.id = `mpc-${m.id}`;
+    const imgEl = m.image
+      ? `<div class="mpc-img"><img src="${m.image}" onerror="this.parentElement.innerHTML='◎'"></div>`
+      : `<div class="mpc-img">◎</div>`;
+    card.innerHTML = `${imgEl}<div class="mpc-name">${m.name}</div>${m.power ? `<div class="mpc-power">${m.power}</div>` : ''}`;
+    card.onclick = () => {
+      document.querySelectorAll('.mpc').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('prod-motor').value = m.id;
+      checkFeasibility();
+    };
+    grid.appendChild(card);
+  });
+  wrap.innerHTML = '';
+  wrap.appendChild(grid);
+}
+
+function checkFeasibility() {
+  const mid   = parseInt(document.getElementById('prod-motor').value);
+  const qty   = parseInt(document.getElementById('prod-qty').value) || 0;
+  const panel = document.getElementById('feasibility-panel');
+  if (!mid || !qty) { panel.style.display = 'none'; return; }
+  const motor = state.motors.find(m => m.id === mid);
+  if (!motor) return;
+  panel.style.display = 'block';
+  let allOk = true;
+  const rows = motor.bom.map(b => {
+    const mat  = state.materials.find(m => m.id === b.materialId);
+    if (!mat) return '';
+    const need = b.qtyPer * qty;
+    const ok   = mat.qty >= need;
+    if (!ok) allOk = false;
+    const col  = ok ? 'var(--green)' : 'var(--red)';
+    return `<div class="feasibility-row">
+      <span>${mat.name}</span>
+      <span style="font-family:var(--font-mono);font-size:12px">
+        Need: <strong>${need} ${mat.unit}</strong> &nbsp;·&nbsp; Have: <span style="color:${col}">${mat.qty} ${mat.unit}</span>
+        &nbsp;<strong style="color:${col}">${ok ? '✓' : '✗ SHORT'}</strong>
+      </span>
+    </div>`;
+  }).join('');
+  document.getElementById('feasibility-rows').innerHTML = rows;
+  document.getElementById('confirm-prod-btn').disabled = !allOk;
+}
+
+function logProduction() {
+  const mid            = parseInt(document.getElementById('prod-motor').value);
+  const qty            = parseInt(document.getElementById('prod-qty').value) || 0;
+  const invoice        = document.getElementById('prod-invoice').value.trim();
+  const customerName   = document.getElementById('prod-customer-name').value.trim();
+  const customerContact= document.getElementById('prod-customer-contact').value.trim();
+  const receivedDate   = document.getElementById('prod-received-date').value;
+  const deliveryDate   = document.getElementById('prod-delivery-date').value;
+  const date           = document.getElementById('prod-date').value || new Date().toISOString().split('T')[0];
+  if (!mid || !qty) { toast('Select motor and quantity', 'error'); return; }
+  const motor = state.motors.find(m => m.id === mid);
+  if (!motor) { toast('Motor not found', 'error'); return; }
+  for (const b of motor.bom) {
+    const mat = state.materials.find(m => m.id === b.materialId);
+    if (!mat || mat.qty < b.qtyPer * qty) {
+      toast(`Insufficient ${mat?.name || 'material'}`, 'error');
+      return;
+    }
+  }
+  for (const b of motor.bom) {
+    const mat = state.materials.find(m => m.id === b.materialId);
+    mat.qty = Math.round((mat.qty - b.qtyPer * qty) * 1000) / 1000;
+  }
+  state.productions.push({
+    id: uid(),
+    motorId: mid,
+    motorName: motor.name,
+    qty,
+    date,
+    invoice: invoice || '—',
+    customerName: customerName || '—',
+    customerContact: customerContact || '—',
+    receivedDate: receivedDate || '—',
+    deliveryDate: deliveryDate || '—',
+    timestamp: ts(),
+    loggedBy: currentSession?.label || '—'
+  });
+  addLog('produce', `${currentSession?.label} produced ${qty}× ${motor.name} — stock deducted`);
+  toast(`✓ ${qty}× ${motor.name} logged. Stock updated.`);
+  autosave();
+  clearProdForm();
+  renderProdHistory();
+  renderDashboard();
+}
+
+function clearProdForm() {
+  document.getElementById('prod-motor').value = '';
+  document.getElementById('prod-qty').value = '';
+  document.getElementById('prod-invoice').value = '';
+  document.getElementById('prod-customer-name').value = '';
+  document.getElementById('prod-customer-contact').value = '';
+  document.getElementById('prod-received-date').value = '';
+  document.getElementById('prod-delivery-date').value = '';
+  document.getElementById('prod-date').value = '';
+  document.getElementById('feasibility-panel').style.display = 'none';
+  document.getElementById('confirm-prod-btn').disabled = false;
+}
+
+function renderProdHistory() {
+  const wrap = document.getElementById('prod-history-wrap');
+  if (!state.productions.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">◉</div>No production runs yet</div>';
+    return;
+  }
+  const rows = [...state.productions].reverse().map(p =>
+    `<tr>
+      <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${p.timestamp}</td>
+      <td><strong>${p.motorName}</strong></td>
+      <td>${p.invoice || '—'}</td>
+      <td>${p.customerName || '—'}</td>
+      <td>${p.customerContact || '—'}</td>
+      <td>${p.receivedDate || '—'}</td>
+      <td>${p.deliveryDate || '—'}</td>
+      <td style="font-family:var(--font-display);font-size:18px;color:var(--accent)">${p.qty}</td>
+      <td style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">${p.date}</td>
+      <td style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">${p.loggedBy || '—'}</td>
+      <td><span class="badge badge-ok">COMPLETED</span></td>
+    </tr>`
+  ).join('');
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Time</th><th>Motor Type</th><th>Invoice</th><th>Customer</th><th>Contact</th><th>Received</th><th>Delivery</th><th>Qty</th><th>Date</th><th>Logged By</th><th>Status</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function groupProcessBomRows(rows=[]) {
+  const map = {};
+  rows.forEach(row => {
+    const key = row.outputMaterialId;
+    if (!map[key]) map[key] = { outputMaterialId: key, inputs: [] };
+    map[key].inputs.push({ materialId: row.inputMaterialId, qtyRequired: row.qtyRequired });
+  });
+  return Object.values(map);
+}
+
+function getProcessBomForOutput(outputMaterialId) {
+  return state.processBom.find(b => b.outputMaterialId === outputMaterialId) || { outputMaterialId, inputs: [] };
+}
+
+function populateProcessSelects() {
+  const outputSelect = document.getElementById('process-output');
+  const bomSelect = document.getElementById('bom-output');
+  if (!outputSelect || !bomSelect) return;
+  const processedOptions = ['<option value="">— Select Output Material —</option>']
+    .concat(state.materials.filter(m => m.type === 'processed').map(m => `<option value="${m.id}">${m.name} (${m.unit})</option>`))
+    .join('');
+  const allOptions = ['<option value="">— Select Output Material —</option>']
+    .concat(state.materials.map(m => `<option value="${m.id}">${m.name} (${m.unit})</option>`))
+    .join('');
+  outputSelect.innerHTML = processedOptions;
+  bomSelect.innerHTML = allOptions;
+}
+
+async function loadProcessData() {
+  populateProcessSelects();
+  if (!currentSession || currentSession.token === 'offline') {
+    renderProcessLog();
+    loadProcessBomBuilder();
+    return;
+  }
+  try {
+    const [bomRes, logRes] = await Promise.all([
+      fetch('/api/process-bom', { headers: { 'x-session-token': currentSession.token } }),
+      fetch('/api/process-log', { headers: { 'x-session-token': currentSession.token } })
+    ]);
+
+    if (bomRes.status === 401 || logRes.status === 401) { doLogout(); return; }
+
+    const bomRows = bomRes.ok ? await bomRes.json() : [];
+    const processLog = logRes.ok ? await logRes.json() : [];
+
+    state.processBom = groupProcessBomRows(Array.isArray(bomRows) ? bomRows : []);
+    state.processLog = Array.isArray(processLog) ? processLog : [];
+  } catch (e) {
+    state.processBom = [];
+    state.processLog = [];
+  }
+
+  loadProcessBomBuilder();
+  renderProcessLog();
+}
+
+function loadProcessBomBuilder() {
+  const outputId = parseInt(document.getElementById('bom-output')?.value);
+  const builder = document.getElementById('process-bom-builder');
+  if (!builder) return;
+  builder.innerHTML = '';
+  if (!outputId) return;
+
+  const bom = getProcessBomForOutput(outputId);
+  if (!bom.inputs.length) {
+    addProcessBomRow();
+    return;
+  }
+  bom.inputs.forEach(item => addProcessBomRow(item.materialId, item.qtyRequired));
+}
+
+function addProcessBomRow(selectedId = '', qty = '') {
+  const builder = document.getElementById('process-bom-builder');
+  if (!builder) return;
+  const row = document.createElement('div');
+  row.className = 'bom-row';
+  row.innerHTML = `
+    <select class="process-bom-input-select">
+      <option value="">— Select Material —</option>
+      ${state.materials.filter(m => m.type === 'raw').map(m => `<option value="${m.id}" ${m.id == selectedId ? 'selected' : ''}>${m.name} (${m.unit})</option>`).join('')}
+    </select>
+    <input type="number" class="process-bom-qty" placeholder="Qty" min="0.01" step="0.01" value="${qty || ''}"/>
+    <span class="bom-unit" style="font-size:11px;color:var(--muted);font-family:var(--font-mono);padding:8px 4px;">unit</span>
+    <button class="btn btn-danger btn-sm" type="button">✕</button>
+  `;
+  const select = row.querySelector('.process-bom-input-select');
+  const unit = row.querySelector('.bom-unit');
+  const removeBtn = row.querySelector('button');
+  select.addEventListener('change', function() {
+    const mat = state.materials.find(m => m.id == this.value);
+    unit.textContent = mat ? mat.unit : 'unit';
+  });
+  removeBtn.onclick = () => row.remove();
+  if (selectedId) {
+    const mat = state.materials.find(m => m.id == selectedId);
+    if (mat) unit.textContent = mat.unit;
+  }
+  builder.appendChild(row);
+}
+
+async function saveProcessBom() {
+  const outputId = parseInt(document.getElementById('bom-output')?.value);
+  if (!outputId) return toast('Select output material', 'error');
+  const rows = Array.from(document.querySelectorAll('#process-bom-builder .bom-row'));
+  const inputs = rows.map(row => ({
+    materialId: parseInt(row.querySelector('.process-bom-input-select').value),
+    qtyRequired: parseFloat(row.querySelector('.process-bom-qty').value)
+  })).filter(item => item.materialId && item.qtyRequired > 0);
+  if (!inputs.length) return toast('Add at least one input material', 'error');
+  try {
+    const res = await fetch('/api/process-bom', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify({ outputMaterialId: outputId, inputs })
+    });
+    const data = await readApiJson(res);
+    if (!res.ok) return toast(data.error || 'Could not save BOM', 'error');
+    state.processBom = state.processBom.filter(b => b.outputMaterialId !== outputId);
+    state.processBom.push({ outputMaterialId: outputId, inputs });
+    toast('✓ Process BOM saved', 'success');
+  } catch (err) {
+    toast('Could not save BOM', 'error');
+  }
+}
+
+function checkProcessFeasibility() {
+  const outputId = parseInt(document.getElementById('process-output')?.value);
+  const qty = parseFloat(document.getElementById('process-qty')?.value) || 0;
+  const panel = document.getElementById('process-feasibility-panel');
+  const rowsWrap = document.getElementById('process-feasibility-rows');
+  const runBtn = document.getElementById('process-run-btn');
+  if (!panel || !rowsWrap || !runBtn) return;
+  if (!outputId || qty <= 0) {
+    panel.style.display = 'none';
+    runBtn.disabled = true;
+    return;
+  }
+
+  const bom = getProcessBomForOutput(outputId).inputs;
+  panel.style.display = 'block';
+  if (!bom.length) {
+    rowsWrap.innerHTML = `<div class="feasibility-row"><span>No process BOM defined for this material.</span></div>`;
+    runBtn.disabled = true;
+    return;
+  }
+
+  let allOk = true;
+  const rows = bom.map(item => {
+    const mat = state.materials.find(m => m.id === item.materialId);
+    const need = item.qtyRequired * qty;
+    const has = mat ? mat.qty : 0;
+    const ok = mat && has >= need;
+    if (!ok) allOk = false;
+    const col = ok ? 'var(--green)' : 'var(--red)';
+    return `<div class="feasibility-row">
+      <span>${mat ? mat.name : 'Unknown material'}</span>
+      <span style="font-family:var(--font-mono);font-size:12px">
+        Need: <strong>${need} ${mat ? mat.unit : ''}</strong> &nbsp;·&nbsp; Have: <span style="color:${col}">${has} ${mat ? mat.unit : ''}</span>
+        &nbsp;<strong style="color:${col}">${ok ? '✓' : '✗ SHORT'}</strong>
+      </span>
+    </div>`;
+  });
+
+  rowsWrap.innerHTML = rows.join('');
+  runBtn.disabled = !allOk;
+}
+
+async function runProcess() {
+  const outputId = parseInt(document.getElementById('process-output')?.value);
+  const qty = parseFloat(document.getElementById('process-qty')?.value);
+  if (!outputId || !qty || qty <= 0) {
+    return toast('Select output material and quantity', 'error');
+  }
+
+  const bom = getProcessBomForOutput(outputId).inputs;
+  if (!bom.length) return toast('Process BOM not defined', 'error');
+
+  for (const item of bom) {
+    const mat = state.materials.find(m => m.id === item.materialId);
+    const need = item.qtyRequired * qty;
+    if (!mat || mat.qty < need) {
+      return toast(`Insufficient stock for ${mat ? mat.name : 'an input material'}`, 'error');
+    }
+  }
+
+  try {
+    const res = await fetch('/api/process-run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify({ outputMaterialId: outputId, qty })
+    });
+    const data = await readApiJson(res);
+    if (!res.ok) return toast(data.error || 'Process failed', 'error');
+
+    const outputMat = state.materials.find(m => m.id === outputId);
+    if (outputMat) outputMat.qty = Math.round((outputMat.qty + qty) * 1000) / 1000;
+    bom.forEach(item => {
+      const mat = state.materials.find(m => m.id === item.materialId);
+      if (mat) mat.qty = Math.round((mat.qty - item.qtyRequired * qty) * 1000) / 1000;
+    });
+
+    state.processLog.unshift({
+      id: Date.now(),
+      outputMaterialId: outputId,
+      outputMaterialName: data.outputMaterialName || outputMat?.name || 'Output',
+      qtyProduced: data.qtyProduced || qty,
+      timestamp: data.timestamp || ts(),
+      processedBy: data.processedBy || currentSession?.label || '—'
+    });
+
+    addLog('produce', `${currentSession?.label} processed ${qty}× ${outputMat?.name || 'output material'}`);
+    renderInventoryTable();
+    renderDashboard();
+    renderProcessLog();
+    clearProcessForm();
+    checkProcessFeasibility();
+    toast(`✓ Processed ${qty}× ${outputMat?.name || 'output material'}`, 'success');
+  } catch (err) {
+    toast('Process request failed', 'error');
+  }
+}
+
+function clearProcessForm() {
+  document.getElementById('process-output').value = '';
+  document.getElementById('process-qty').value = '';
+  document.getElementById('process-date').value = '';
+  document.getElementById('process-feasibility-panel').style.display = 'none';
+  document.getElementById('process-feasibility-rows').innerHTML = '';
+  document.getElementById('process-run-btn').disabled = false;
+}
+
+function renderProcessLog() {
+  const wrap = document.getElementById('process-log-wrap');
+  if (!wrap) return;
+  if (!state.processLog.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙</div>No material processing history yet</div>';
+    return;
+  }
+  const rows = state.processLog.map(entry => `
+    <tr>
+      <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${entry.timestamp}</td>
+      <td>${entry.outputMaterialName || 'Unknown'}</td>
+      <td style="font-family:var(--font-display);font-size:18px;color:var(--accent)">${entry.qtyProduced}</td>
+      <td style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">${entry.processedBy || '—'}</td>
+      <td><span class="badge badge-ok">COMPLETED</span></td>
+    </tr>`).join('');
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Time</th><th>Output Material</th><th>Qty</th><th>Processed By</th><th>Status</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ════════════════════════════════════════════════════
+// ACTIVITY LOG
+// ════════════════════════════════════════════════════
+function renderLog() {
+  const wrap   = document.getElementById('activity-log');
+  const canClear = currentSession && ROLE_CONFIG[currentSession.role].canClearLog;
+  document.getElementById('clear-log-btn').style.display = canClear ? 'inline-block' : 'none';
+  if (!state.log.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">≡</div>No activity yet</div>';
+    return;
+  }
+  wrap.innerHTML = state.log.map(l => {
+    const cls  = l.type === 'produce' ? 'log-produce' : l.type === 'restock' ? 'log-restock' : 'log-add';
+    const icon = l.type === 'produce' ? '▶' : l.type === 'restock' ? '↑' : '+';
+    return `<div class="log-entry">
+      <div class="log-time">${l.ts}</div>
+      <div class="log-icon ${cls}">${icon}</div>
+      <div>
+        ${l.msg}
+        ${l.by ? `<span style="color:var(--muted);font-size:10px;margin-left:6px;font-family:var(--font-mono)">by ${l.by}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function clearLog() {
+  state.log = [];
+  autosave();
+  renderLog();
+}
+
+// ════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════
+function renderDashboard() {
+  const low    = state.materials.filter(m => m.qty <= m.min && m.min > 0);
+  const outOf  = low.filter(m => m.qty === 0);
+  document.getElementById('sv-materials').textContent = state.materials.length;
+  document.getElementById('sv-lowstock').textContent  = low.length;
+  document.getElementById('sv-motors').textContent    = state.motors.length;
+  document.getElementById('sv-runs').textContent      = state.productions.length;
+
+  // ── Low Stock Banner ──────────────────────────────
+  const banner = document.getElementById('low-stock-banner');
+  if (low.length && !_bannerDismissed) {
+    banner.classList.add('visible');
+    document.getElementById('lsb-title-text').textContent =
+      `${low.length} MATERIAL${low.length>1?'S':''} NEED ATTENTION` +
+      (outOf.length ? ` · ${outOf.length} OUT OF STOCK` : '');
+    document.getElementById('lsb-items').innerHTML = low.map(m => {
+      const isOut = m.qty === 0;
+      return `<div class="lsb-item${isOut?' lsb-item-out':''}">
+        ${isOut ? '<span class="lsb-item-badge">OUT</span>' : '<span class="lsb-item-badge" style="background:var(--yellow);color:#000">LOW</span>'}
+        <span class="lsb-item-name">${m.name}</span>
+        <span class="lsb-item-qty">${m.qty} / ${m.min} ${m.unit}</span>
+      </div>`;
+    }).join('');
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  // ── Low Stock Alerts table ────────────────────────
+  const alertWrap = document.getElementById('alert-table-wrap');
+  if (!low.length) {
+    alertWrap.innerHTML = '<div class="empty-state"><div class="empty-icon">✓</div>All materials above threshold</div>';
+  } else {
+    alertWrap.innerHTML = `<table>
+      <thead><tr><th>Material</th><th>Current Stock</th><th>Threshold</th><th>Status</th></tr></thead>
+      <tbody>${low.map(m => `<tr>
+        <td><strong>${m.name}</strong></td>
+        <td style="font-family:var(--font-mono);color:var(--red)">${m.qty} ${m.unit}</td>
+        <td style="font-family:var(--font-mono);color:var(--muted)">Min: ${m.min} ${m.unit}</td>
+        <td><span class="badge ${m.qty === 0 ? 'badge-low' : 'badge-low'}">${m.qty === 0 ? 'OUT' : 'LOW'}</span></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  // ── Inventory Snapshot ────────────────────────────
+  const dashWrap = document.getElementById('dash-inventory-wrap');
+  if (!state.materials.length) {
+    dashWrap.innerHTML = '<div class="empty-state"><div class="empty-icon">◈</div>No materials yet</div>';
+  } else {
+    dashWrap.innerHTML = `<table>
+      <thead><tr><th>Material</th><th>Stock</th><th>Level</th><th>Category</th></tr></thead>
+      <tbody>${state.materials.slice(0, 12).map(m => {
+        const pct = m.min > 0 ? Math.min(100, (m.qty / m.min) * 100) : (m.qty > 0 ? 100 : 0);
+        const col = m.qty <= m.min ? 'var(--red)' : m.qty <= m.min * 2 ? 'var(--yellow)' : 'var(--green)';
+        return `<tr>
+          <td><strong>${m.name}</strong></td>
+          <td style="font-family:var(--font-mono)">${m.qty} ${m.unit}</td>
+          <td style="width:180px"><div class="qty-bar" style="min-width:120px"><div class="qty-bar-fill" style="width:${pct}%;background:${col}"></div></div></td>
+          <td style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">${m.category}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+}
+
+// ════════════════════════════════════════════════════
+// SEED DATA (first-run only)
+// ════════════════════════════════════════════════════
+function loadSampleData() {
+  const mats = [
+    { name:'Copper Wire (1.5mm)',       unit:'kg',     qty:120, min:30,  category:'Electrical'  },
+    { name:'Silicon Steel Laminates',   unit:'kg',     qty:85,  min:20,  category:'Electrical'  },
+    { name:'Ball Bearings (6205)',       unit:'pcs',    qty:200, min:50,  category:'Mechanical'  },
+    { name:'Rotor Shaft',               unit:'pcs',    qty:45,  min:15,  category:'Mechanical'  },
+    { name:'End Shield (DE)',            unit:'pcs',    qty:60,  min:20,  category:'Housing'     },
+    { name:'End Shield (NDE)',           unit:'pcs',    qty:60,  min:20,  category:'Housing'     },
+    { name:'Terminal Box',              unit:'pcs',    qty:10,  min:15,  category:'Housing'     },
+    { name:'Stator Frame (132M)',        unit:'pcs',    qty:30,  min:10,  category:'Housing'     },
+    { name:'M8 Bolts',                  unit:'pcs',    qty:500, min:100, category:'Fasteners'   },
+    { name:'Varnish / Impregnation',    unit:'liters', qty:25,  min:10,  category:'Consumables' },
+  ];
+  mats.forEach(m => state.materials.push({ id:uid(), ...m, type:'raw', image:'' }));
+  const bom = state.materials.map((m, i) => ({
+    materialId: m.id,
+    qtyPer: [3.5, 4.2, 2, 1, 1, 1, 1, 1, 12, 0.5][i]
+  }));
+  state.motors.push({ id:uid(), name:'5HP 3-Phase Induction Motor', power:'5 HP / 3.73 kW', frame:'132M', image:'', bom });
+  addLog('add', 'Sample data loaded — 10 materials, 1 motor type');
+  autosave();
+}
+
+// ════════════════════════════════════════════════════
+// REPORTS
+// ════════════════════════════════════════════════════
+
+function initReportsSection() {
+  // Set default date range: first of this month → today
+  const today = new Date();
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const fmt = d => d.toISOString().split('T')[0];
+  ['rpt-prod-from','rpt-cons-from'].forEach(id => {
+    if (!document.getElementById(id).value)
+      document.getElementById(id).value = fmt(firstOfMonth);
+  });
+  ['rpt-prod-to','rpt-cons-to'].forEach(id => {
+    if (!document.getElementById(id).value)
+      document.getElementById(id).value = fmt(today);
+  });
+  // Reset preview
+  document.getElementById('preview-title').textContent  = 'SELECT A REPORT TO PREVIEW';
+  document.getElementById('preview-count').textContent  = '';
+  document.getElementById('report-preview-wrap').innerHTML =
+    '<div class="empty-state"><div class="empty-icon">⬢</div>Click any export button above — a preview will appear here</div>';
+}
+
+// ── Build report data objects ──────────────────────
+function buildReportData(type) {
+  const today = new Date().toLocaleDateString('en-IN');
+  const company = 'NGEF (HUBLI) Ltd.';
+
+  if (type === 'stock') {
+    const rows = state.materials.map(m => ({
+      'Material Name': m.name,
+      'Category':      m.category,
+      'Current Stock': m.qty,
+      'Unit':          m.unit,
+      'Min Threshold': m.min,
+      'Status':        m.qty === 0 ? 'OUT OF STOCK' : m.qty <= m.min ? 'LOW' : m.qty <= m.min*2 ? 'OK' : 'GOOD'
+    }));
+    return { title:'Stock Register', subtitle:`As of ${today} · ${company}`, rows, cols: Object.keys(rows[0]||{}) };
+  }
+
+  if (type === 'lowstock') {
+    const low = state.materials.filter(m => m.qty <= m.min && m.min > 0);
+    const rows = low.map(m => ({
+      'Material Name':  m.name,
+      'Category':       m.category,
+      'Current Stock':  m.qty,
+      'Unit':           m.unit,
+      'Min Threshold':  m.min,
+      'Shortage':       Math.max(0, m.min - m.qty),
+      'Status':         m.qty === 0 ? 'OUT OF STOCK' : 'LOW'
+    }));
+    return { title:'Low Stock Alert Report', subtitle:`Generated ${today} · ${company}`, rows, cols: Object.keys(rows[0]||{}) };
+  }
+
+  if (type === 'production') {
+    const from = document.getElementById('rpt-prod-from').value;
+    const to   = document.getElementById('rpt-prod-to').value;
+    let prods = [...state.productions];
+    if (from) prods = prods.filter(p => p.date >= from);
+    if (to)   prods = prods.filter(p => p.date <= to);
+    prods.sort((a,b) => a.date.localeCompare(b.date));
+    const rows = prods.map(p => ({
+      'Date':           p.date,
+      'Invoice':        p.invoice || '—',
+      'Customer Name':  p.customerName || '—',
+      'Customer Contact': p.customerContact || '—',
+      'Received Date':  p.receivedDate || '—',
+      'Expected Delivery': p.deliveryDate || '—',
+      'Motor Type':     p.motorName,
+      'Qty Produced':   p.qty,
+      'Logged By':      p.loggedBy || '—',
+      'Timestamp':      p.timestamp
+    }));
+    return { title:'Production History Report', subtitle:`${from||'All'} to ${to||'All'} · ${company}`, rows, cols: Object.keys(rows[0]||{}) };
+  }
+
+  if (type === 'consumption') {
+    const from = document.getElementById('rpt-cons-from').value;
+    const to   = document.getElementById('rpt-cons-to').value;
+    let prods = [...state.productions];
+    if (from) prods = prods.filter(p => p.date >= from);
+    if (to)   prods = prods.filter(p => p.date <= to);
+
+    // Sum consumption per material across filtered production runs
+    const consumption = {};
+    for (const p of prods) {
+      const motor = state.motors.find(m => m.id === p.motorId);
+      if (!motor) continue;
+      for (const b of motor.bom) {
+        const mat = state.materials.find(m => m.id === b.materialId);
+        if (!mat) continue;
+        if (!consumption[mat.id]) {
+          consumption[mat.id] = { name: mat.name, category: mat.category, unit: mat.unit, total: 0 };
+        }
+        consumption[mat.id].total += b.qtyPer * p.qty;
+      }
+    }
+    const rows = Object.values(consumption).map(c => ({
+      'Material Name':    c.name,
+      'Category':         c.category,
+      'Total Consumed':   Math.round(c.total * 1000) / 1000,
+      'Unit':             c.unit,
+      'Current Stock':    (state.materials.find(m=>m.name===c.name)||{}).qty ?? '—'
+    }));
+    rows.sort((a,b) => b['Total Consumed'] - a['Total Consumed']);
+    return { title:'Material Consumption Report', subtitle:`${from||'All'} to ${to||'All'} · ${company}`, rows, cols: Object.keys(rows[0]||{}) };
+  }
+}
+
+// ── Preview table ──────────────────────────────────
+function showPreview(type, data) {
+  const titles = { stock:'📦 Stock Register', lowstock:'⚠ Low Stock Alert', production:'🏭 Production History', consumption:'📊 Material Consumption' };
+  document.getElementById('preview-title').textContent = titles[type] || 'PREVIEW';
+  document.getElementById('preview-count').textContent = `${data.rows.length} rows`;
+  if (!data.rows.length) {
+    document.getElementById('report-preview-wrap').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">✓</div>No data matches the selected filters</div>';
+    return;
+  }
+  const maxRows = 8;
+  const preview = data.rows.slice(0, maxRows);
+  const more = data.rows.length > maxRows ? `<tr><td colspan="${data.cols.length}" style="text-align:center;color:var(--muted);font-style:italic;font-size:11px">... and ${data.rows.length - maxRows} more rows in the exported file</td></tr>` : '';
+  const headerHtml = data.cols.map(c => `<th>${c}</th>`).join('');
+  const rowsHtml = preview.map(r => `<tr>${data.cols.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`).join('');
+  document.getElementById('report-preview-wrap').innerHTML = `
+    <div class="report-preview">
+      <table><thead><tr>${headerHtml}</tr></thead><tbody>${rowsHtml}${more}</tbody></table>
+    </div>`;
+}
+
+// ── Excel Export ───────────────────────────────────
+function exportExcel(type) {
+  const data = buildReportData(type);
+  if (!data) return;
+  showPreview(type, data);
+  if (!data.rows.length) { toast('No data to export', 'info'); return; }
+
+  // Build CSV (opens fine in Excel)
+  const escape = val => {
+    const s = String(val ?? '');
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+
+  const lines = [];
+  // Report header rows
+  lines.push(escape(data.title));
+  lines.push(escape(data.subtitle));
+  lines.push('');
+  // Column headers
+  lines.push(data.cols.map(escape).join(','));
+  // Data rows
+  data.rows.forEach(r => lines.push(data.cols.map(c => escape(r[c])).join(',')));
+  // Footer
+  lines.push('');
+  lines.push(`Exported on,${new Date().toLocaleString('en-IN')}`);
+  lines.push(`Exported by,${currentSession?.label || '—'}`);
+
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${data.title.replace(/\s+/g,'_')}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  addLog('add', `Exported ${data.title} to Excel/CSV`);
+  toast(`✓ ${data.title} downloaded`, 'success');
+}
+
+// ── PDF Export ─────────────────────────────────────
+function exportPDF(type) {
+  const data = buildReportData(type);
+  if (!data) return;
+  showPreview(type, data);
+  if (!data.rows.length) { toast('No data to export', 'info'); return; }
+
+  const now     = new Date().toLocaleString('en-IN');
+  const by      = currentSession?.label || '—';
+  const company = 'NGEF (HUBLI) Ltd.';
+
+  // Status colour map for PDF
+  const statusColor = s => {
+    if (!s) return '#e0eaff';
+    const u = String(s).toUpperCase();
+    if (u === 'OUT OF STOCK' || u === 'LOW') return '#ff5252';
+    if (u === 'OK') return '#ffd740';
+    if (u === 'GOOD') return '#00e676';
+    return '#e0eaff';
+  };
+
+  const thStyle  = 'background:#171d2b;color:#5a6a85;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;padding:8px 12px;text-align:left;border-bottom:1px solid #1e2a3a;font-family:monospace;font-weight:400;';
+  const tdStyle  = 'padding:9px 12px;font-size:12px;border-bottom:1px solid rgba(30,42,58,0.5);color:#e0eaff;font-family:sans-serif;';
+  const trAlt    = 'background:rgba(255,255,255,0.015);';
+
+  const headerRow = data.cols.map(c => `<th style="${thStyle}">${c}</th>`).join('');
+  const dataRows  = data.rows.map((r, i) => {
+    const cells = data.cols.map(c => {
+      const val = r[c] ?? '';
+      const isStatus = c === 'Status';
+      const cellStyle = isStatus
+        ? `${tdStyle}color:${statusColor(val)};font-weight:600;font-family:monospace;`
+        : tdStyle;
+      return `<td style="${cellStyle}">${val}</td>`;
+    }).join('');
+    return `<tr style="${i%2===1 ? trAlt : ''}">${cells}</tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <title>${data.title} — ${company}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#0a0d12; color:#e0eaff; font-family:'Exo 2',sans-serif; padding:40px; }
+    .header { border-bottom:1px solid #1e2a3a; padding-bottom:20px; margin-bottom:28px; display:flex; justify-content:space-between; align-items:flex-start; }
+    .company { font-size:11px; color:#5a6a85; font-family:monospace; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+    .report-title { font-size:24px; font-weight:700; letter-spacing:1px; color:#00d4ff; }
+    .report-sub { font-size:12px; color:#5a6a85; margin-top:4px; font-family:monospace; }
+    .meta { text-align:right; font-size:11px; color:#5a6a85; font-family:monospace; line-height:1.8; }
+    table { width:100%; border-collapse:collapse; background:#111620; border-radius:8px; overflow:hidden; border:1px solid #1e2a3a; }
+    .summary { display:flex; gap:16px; margin-bottom:20px; }
+    .summary-box { background:#111620; border:1px solid #1e2a3a; border-radius:8px; padding:12px 18px; flex:1; }
+    .summary-label { font-size:10px; color:#5a6a85; font-family:monospace; letter-spacing:2px; text-transform:uppercase; }
+    .summary-value { font-size:22px; font-weight:700; color:#00d4ff; margin-top:4px; }
+    .footer { margin-top:24px; padding-top:16px; border-top:1px solid #1e2a3a; font-size:11px; color:#5a6a85; font-family:monospace; display:flex; justify-content:space-between; }
+    @media print {
+      body { background:#fff; color:#000; padding:20px; }
+      table { border:1px solid #ccc; }
+      .report-title { color:#0066cc; }
+      .summary-box { border:1px solid #ccc; background:#f9f9f9; }
+      .summary-value { color:#0066cc; }
+    }
+  </style>
+  </head><body>
+  <div class="header">
+    <div>
+      <div class="company">${company}</div>
+      <div class="report-title">${data.title}</div>
+      <div class="report-sub">${data.subtitle}</div>
+    </div>
+    <div class="meta">
+      <div>Generated: ${now}</div>
+      <div>By: ${by}</div>
+      <div>Total Records: ${data.rows.length}</div>
+    </div>
+  </div>
+  <div class="summary">
+    <div class="summary-box"><div class="summary-label">Total Records</div><div class="summary-value">${data.rows.length}</div></div>
+    ${type==='stock'    ? `<div class="summary-box"><div class="summary-label">Low / Out of Stock</div><div class="summary-value" style="color:#ff5252">${data.rows.filter(r=>r.Status==='LOW'||r.Status==='OUT OF STOCK').length}</div></div>` : ''}
+    ${type==='lowstock' ? `<div class="summary-box"><div class="summary-label">Out of Stock</div><div class="summary-value" style="color:#ff5252">${data.rows.filter(r=>r.Status==='OUT OF STOCK').length}</div></div>` : ''}
+    ${type==='production' ? `<div class="summary-box"><div class="summary-label">Total Units Produced</div><div class="summary-value" style="color:#00e676">${data.rows.reduce((s,r)=>s+(+r['Qty Produced']||0),0)}</div></div>` : ''}
+    ${type==='consumption' ? `<div class="summary-box"><div class="summary-label">Materials Consumed</div><div class="summary-value">${data.rows.length}</div></div>` : ''}
+  </div>
+  <table>
+    <thead><tr>${headerRow}</tr></thead>
+    <tbody>${dataRows}</tbody>
+  </table>
+  <div class="footer">
+    <span>NGEF (HUBLI) Ltd. · MotorStock v3.0 · Confidential</span>
+    <span>Exported: ${now}</span>
+  </div>
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`;
+
+  const blob = new Blob([html], { type:'text/html' });
+  const url  = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  addLog('add', `Exported ${data.title} to PDF`);
+  toast(`✓ ${data.title} — print dialog opened`, 'success');
+}
+
+// ── INIT ──
+document.getElementById('prod-date').valueAsDate = new Date();
+document.addEventListener('DOMContentLoaded', () => {
+  const siDate = document.getElementById('si-date');
+  if (siDate) siDate.valueAsDate = new Date();
+});
+
+// ════════════════════════════════════════════════════
+// STOCK-IN
+// ════════════════════════════════════════════════════
+function populateStockInMaterials() {
+  const sel = document.getElementById('si-material');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Select Material —</option>' +
+    state.materials.map(m => `<option value="${m.id}" ${m.id==prev?'selected':''}>${m.name} (${m.unit})</option>`).join('');
+}
+
+async function loadStockInHistory() {
+  if (!currentSession || currentSession.token === 'offline') return;
+  try {
+    const res  = await fetch('/api/stock-in', { headers:{ 'x-session-token': currentSession.token } });
+    const data = await readApiJson(res);
+    if (!res.ok) throw new Error(data.error || 'Could not load stock-in history');
+    renderStockInHistory(data);
+  } catch(e) {
+    document.getElementById('si-history-wrap').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">⬇</div>Could not load history</div>';
+  }
+}
+
+function renderStockInHistory(entries) {
+  const wrap     = document.getElementById('si-history-wrap');
+  const countEl  = document.getElementById('si-count');
+  const isAdmin  = currentSession && currentSession.role === 'admin';
+
+  if (!entries || !entries.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">⬇</div>No stock-in entries yet</div>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  if (countEl) countEl.textContent = `${entries.length} entries`;
+
+  const rows = entries.map(e => `<tr>
+    <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${e.timestamp}</td>
+    <td><strong>${e.materialName}</strong></td>
+    <td style="font-family:var(--font-display);font-size:18px;color:var(--green)">+${e.qtyReceived}</td>
+    <td style="font-family:var(--font-mono);font-size:11px">${e.invoiceNo || '—'}</td>
+    <td style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${e.receivedDate}</td>
+    <td style="font-size:11px;color:var(--muted)">${e.receivedBy}</td>
+    <td style="font-size:11px;color:var(--muted)">${e.notes || '—'}</td>
+    <td>${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="cancelStockIn(${e.id})">✕</button>` : ''}</td>
+  </tr>`).join('');
+
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Time</th><th>Material</th><th>Qty Received</th><th>Invoice</th><th>Date</th><th>Received By</th><th>Notes</th><th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+async function submitStockIn() {
+  const materialId  = document.getElementById('si-material').value;
+  const qty         = parseFloat(document.getElementById('si-qty').value);
+  const date        = document.getElementById('si-date').value;
+  const invoiceNo   = document.getElementById('si-invoice').value.trim();
+  const notes       = document.getElementById('si-notes').value.trim();
+
+  if (!materialId)    { toast('Select a material', 'error'); return; }
+  if (!qty || qty<=0) { toast('Enter a valid quantity', 'error'); return; }
+  if (!date)          { toast('Select a date', 'error'); return; }
+
+  try {
+    const res = await fetch('/api/stock-in', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify({ materialId: parseInt(materialId), qtyReceived: qty, invoiceNo, receivedDate: date, notes })
+    });
+    const data = await readApiJson(res);
+    if (!res.ok) throw new Error(data.error || 'Could not record stock-in');
+    if (res.ok) {
+      // Update local state so dashboard reflects new qty immediately
+      const mat = state.materials.find(m => m.id === parseInt(materialId));
+      if (mat) mat.qty = data.newQty;
+      toast(`✓ Stock-In recorded — ${mat?.name} now at ${data.newQty} ${mat?.unit}`, 'success');
+      clearStockInForm();
+      loadStockInHistory();
+      renderDashboard();
+      renderInventoryTable();
+    } else {
+      toast(data.error || 'Failed to record stock-in', 'error');
+    }
+  } catch(e) {
+    toast('Server error — could not save', 'error');
+  }
+}
+
+async function cancelStockIn(id) {
+  if (!confirm('Cancel this stock-in entry?\n\nThe qty will be deducted back from the material.')) return;
+  try {
+    const res  = await fetch(`/api/stock-in/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-session-token': currentSession.token }
+    });
+    const data = await readApiJson(res);
+    if (!res.ok) throw new Error(data.error || 'Could not cancel stock-in');
+    if (res.ok) {
+      toast('Stock-in entry cancelled — qty reversed', 'info');
+      await loadData();       // reload full state so qty is accurate
+      loadStockInHistory();
+      renderDashboard();
+    } else {
+      toast(data.error || 'Failed', 'error');
+    }
+  } catch(e) {
+    toast('Server error', 'error');
+  }
+}
+
+function clearStockInForm() {
+  document.getElementById('si-material').value = '';
+  document.getElementById('si-qty').value      = '';
+  document.getElementById('si-invoice').value  = '';
+  document.getElementById('si-notes').value    = '';
+}
+
+// ════════════════════════════════════════════════════
+// ALERT SETTINGS
+// ════════════════════════════════════════════════════
+async function readApiJson(res) {
+  const text = await res.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch(e) {
+    return { error: text || `Request failed (${res.status})` };
+  }
+}
+
+async function loadAlertConfig() {
+  if (!currentSession || currentSession.token === 'offline') return;
+  try {
+    const res  = await fetch('/api/alert-config', { headers:{ 'x-session-token': currentSession.token } });
+    const data = await readApiJson(res);
+    if (!res.ok) throw new Error(data.error || 'Could not load alert settings');
+    document.getElementById('alert-enabled').checked    = data.enabled;
+    document.getElementById('alert-user').value         = data.smtpUser    || '';
+    document.getElementById('alert-pass').value         = data.smtpPass    || '';
+    document.getElementById('alert-recipients').value   = data.recipients  || '';
+    const lastEl = document.getElementById('alert-last-sent');
+    const parts = [];
+    if (data.lastImmediate) parts.push(`Last immediate alert: ${new Date(data.lastImmediate).toLocaleString('en-IN')}`);
+    if (data.lastDaily)     parts.push(`Last daily summary: ${new Date(data.lastDaily).toLocaleString('en-IN')}`);
+    lastEl.textContent = parts.join('  ·  ');
+  } catch(e) {
+    showAlertMsg('error', 'Error: ' + (e.message || 'Could not load alert settings'));
+  }
+}
+
+async function saveAlertConfig() {
+  const cfg = {
+    enabled:    document.getElementById('alert-enabled').checked,
+    smtpUser:   document.getElementById('alert-user').value.trim(),
+    smtpPass:   document.getElementById('alert-pass').value,
+    recipients: document.getElementById('alert-recipients').value.trim(),
+  };
+  try {
+    const res = await fetch('/api/alert-config', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify(cfg)
+    });
+    const data = await readApiJson(res);
+    if (res.ok) {
+      showAlertMsg('success', '✓ Settings saved successfully');
+      toast('✓ Alert settings saved', 'success');
+    } else {
+      showAlertMsg('error', '✗ ' + (data.error || 'Save failed'));
+    }
+  } catch(e) {
+    showAlertMsg('error', '✗ Server error');
+  }
+}
+
+async function testAlertEmail() {
+  showAlertMsg('info', '📧 Sending test email...');
+  try {
+    const res  = await fetch('/api/alert-config/test', {
+      method: 'POST',
+      headers: { 'x-session-token': currentSession.token }
+    });
+    const data = await readApiJson(res);
+    if (res.ok) {
+      showAlertMsg('success', '✓ ' + data.message);
+      toast('✓ Test email sent', 'success');
+    } else {
+      showAlertMsg('error', '✗ ' + (data.error || 'Failed — check your Gmail address and App Password'));
+    }
+  } catch(e) {
+    showAlertMsg('error', '✗ Server error — is the server running?');
+  }
+}
+
+function showAlertMsg(type, msg) {
+  const el = document.getElementById('alert-msg');
+  const styles = {
+    success: 'background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:var(--green)',
+    error:   'background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);color:var(--red)',
+    info:    'background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--accent)',
+  };
+  el.style.cssText = `display:block;margin-top:14px;padding:10px 16px;border-radius:6px;font-size:12px;font-family:var(--font-mono);${styles[type]}`;
+  el.textContent = msg;
+}
+
+// ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// TRANSFORMER MODULE
+// ════════════════════════════════════════════════════
+let trfJobs    = [];   // in-memory job list
+let trfCurrent = null; // currently open job
+
+// ── Material picker state ─────────────────────────────
+let _trfSelectedMaterialId = null; // null = custom (not from inventory)
+
+// Close dropdown when clicking anywhere outside input + dropdown
+document.addEventListener('click', function(e) {
+  const dd    = document.getElementById('trf-mat-dropdown');
+  const input = document.getElementById('trf-mat-name');
+  if (!dd || dd.style.display === 'none') return;
+  if (dd.contains(e.target) || e.target === input) return;
+  dd.style.display = 'none';
+});
+
+function _positionTrfDropdown() {
+  const input    = document.getElementById('trf-mat-name');
+  const dropdown = document.getElementById('trf-mat-dropdown');
+  if (!input || !dropdown) return;
+  const rect = input.getBoundingClientRect();
+  dropdown.style.left   = rect.left   + 'px';
+  dropdown.style.top    = (rect.bottom + 4) + 'px';
+  dropdown.style.width  = rect.width  + 'px';
+}
+
+function trfMatSearchOpen() {
+  trfMatSearch(document.getElementById('trf-mat-name').value);
+}
+
+function trfMatSearch(query) {
+  const dropdown = document.getElementById('trf-mat-dropdown');
+  if (!dropdown) return;
+  const q = (query || '').toLowerCase().trim();
+
+  // If user types again after an inventory pick, reset the lock
+  if (_trfSelectedMaterialId !== null) {
+    _trfSelectedMaterialId = null;
+    const unitEl = document.getElementById('trf-mat-unit');
+    unitEl.disabled = false;
+    unitEl.style.opacity = '';
+    unitEl.title = '';
+    unitEl.value = '';
+  }
+
+  const matches = state.materials.filter(m => !q || m.name.toLowerCase().includes(q));
+  const exactMatch = matches.find(m => m.name.toLowerCase() === q);
+
+  if (!matches.length && !(q && !exactMatch)) {
+    dropdown.style.display = 'none';
+    return;
+  }
+
+  // Build DOM nodes directly — no inline onclick strings, so JS scope is guaranteed
+  dropdown.innerHTML = '';
+
+  matches.forEach(m => {
+    const isOut = m.qty === 0;
+    const isLow = !isOut && m.min > 0 && m.qty <= m.min;
+
+    const badge = isOut
+      ? `<span style="font-size:10px;padding:2px 7px;border-radius:3px;background:var(--red);color:#fff;font-family:var(--font-mono);font-weight:700">OUT</span>`
+      : isLow
+      ? `<span style="font-size:10px;padding:2px 7px;border-radius:3px;background:var(--yellow);color:#000;font-family:var(--font-mono);font-weight:700">LOW</span>`
+      : `<span style="font-size:10px;padding:2px 7px;border-radius:3px;background:rgba(0,230,118,0.15);color:var(--green);font-family:var(--font-mono);border:1px solid rgba(0,230,118,0.3)">IN STOCK</span>`;
+
+    const div = document.createElement('div');
+    div.className = 'trf-mat-option' + (isOut ? ' trf-mat-opt-out' : isLow ? ' trf-mat-opt-low' : '');
+    div.innerHTML = `<span style="font-size:15px;font-weight:600">${m.name}</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;color:var(--muted);font-family:var(--font-mono)">${m.qty} ${m.unit}</span>
+        ${badge}
+      </span>`;
+
+    // Direct addEventListener — no scope issues whatsoever
+    div.addEventListener('click', function() {
+      selectTrfMaterial(m.id, m.name, m.unit);
+    });
+
+    dropdown.appendChild(div);
+  });
+
+  // Custom material option
+  if (q && !exactMatch) {
+    const custom = document.createElement('div');
+    custom.className = 'trf-mat-opt-custom';
+    custom.innerHTML = `↵ Use <strong style="color:var(--text)">${q}</strong> as custom material (not from inventory)`;
+    custom.addEventListener('click', function() {
+      selectTrfCustom(query);
+    });
+    dropdown.appendChild(custom);
+  }
+
+  _positionTrfDropdown();
+  dropdown.style.display = 'block';
+}
+
+function selectTrfMaterial(id, name, unit) {
+  _trfSelectedMaterialId = id;
+  document.getElementById('trf-mat-name').value = name;
+  document.getElementById('trf-mat-dropdown').style.display = 'none';
+
+  // Auto-fill unit from inventory and lock it — no need to ask
+  const unitEl = document.getElementById('trf-mat-unit');
+  unitEl.value    = unit;
+  unitEl.disabled = true;
+  unitEl.style.opacity = '0.5';
+  unitEl.title = 'Unit is preset from inventory';
+
+  // Focus qty next
+  document.getElementById('trf-mat-qty').focus();
+}
+
+function selectTrfCustom(name) {
+  _trfSelectedMaterialId = null;
+  document.getElementById('trf-mat-name').value = name;
+  document.getElementById('trf-mat-dropdown').style.display = 'none';
+
+  // Unlock unit for custom materials
+  const unitEl = document.getElementById('trf-mat-unit');
+  unitEl.disabled = false;
+  unitEl.style.opacity = '';
+  unitEl.title = '';
+  unitEl.value = '';
+  unitEl.focus();
+}
+
+// ── File icon helper ─────────────────────────────────
+function fileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['pdf'].includes(ext))                  return '📄';
+  if (['xlsx','xls','csv'].includes(ext))     return '📊';
+  if (['docx','doc'].includes(ext))           return '📝';
+  if (['jpg','jpeg','png','gif'].includes(ext)) return '🖼️';
+  return '📁';
+}
+
+// ── Status CSS class helper ───────────────────────────
+function trfStatusClass(status) {
+  const map = { 'Received':'trf-received', 'In Repair':'trf-inrepair', 'Testing':'trf-testing', 'Dispatched':'trf-dispatched' };
+  return map[status] || 'trf-received';
+}
+
+// ── Format file size ─────────────────────────────────
+function fmtSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+// ── Load and render job list ──────────────────────────
+async function loadTrfJobs() {
+  if (!currentSession || currentSession.token === 'offline') return;
+  try {
+    const res  = await fetch('/api/transformer/jobs', { headers:{ 'x-session-token': currentSession.token } });
+    const data = await res.json();
+    trfJobs = data;
+    renderTrfJobList();
+  } catch(e) {
+    document.getElementById('trf-jobs-wrap').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">⚠</div>Could not load jobs</div>';
+  }
+}
+
+function renderTrfJobList() {
+  const wrap      = document.getElementById('trf-jobs-wrap');
+  const countEl   = document.getElementById('trf-job-count');
+  const search    = (document.getElementById('trf-search')?.value || '').toLowerCase();
+  const statusFlt = document.getElementById('trf-filter-status')?.value || '';
+
+  let jobs = trfJobs;
+  if (search)    jobs = jobs.filter(j => j.job_no.toLowerCase().includes(search) || j.customer_name.toLowerCase().includes(search));
+  if (statusFlt) jobs = jobs.filter(j => j.status === statusFlt);
+
+  if (countEl) countEl.textContent = `${jobs.length} job${jobs.length!==1?'s':''}`;
+
+  if (!jobs.length) {
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">⚡</div>No jobs found</div>';
+    return;
+  }
+
+  const rows = jobs.map(j => `<tr style="cursor:pointer" onclick="openTrfJob(${j.id})">
+    <td style="font-family:var(--font-mono);color:var(--accent)">${j.job_no}</td>
+    <td><strong>${j.customer_name}</strong><br><span style="font-size:11px;color:var(--muted)">${j.customer_contact||''}</span></td>
+    <td style="font-family:var(--font-mono)">${j.kva_rating||'—'}</td>
+    <td><span class="trf-status ${trfStatusClass(j.status)}">${j.status}</span></td>
+    <td style="font-family:var(--font-mono);font-size:12px">${j.received_date}</td>
+    <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">${j.expected_date||'—'}</td>
+    <td style="font-family:var(--font-mono)">₹${(j.labour_charge||0).toLocaleString('en-IN')}</td>
+    <td><span class="trf-status ${j.payment_status==='Received'?'trf-payment-received':'trf-payment-pending'}">${j.payment_status}</span></td>
+  </tr>`).join('');
+
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Job No.</th><th>Customer</th><th>KVA</th><th>Status</th>
+      <th>Received</th><th>Expected</th><th>Amount</th><th>Payment</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ── Open job detail ───────────────────────────────────
+async function openTrfJob(id) {
+  if (!currentSession || currentSession.token === 'offline') return;
+  try {
+    const res  = await fetch(`/api/transformer/jobs/${id}`, { headers:{ 'x-session-token': currentSession.token } });
+    const job  = await res.json();
+    trfCurrent = job;
+    populateTrfDetail(job);
+    showSection('trf-detail');
+  } catch(e) {
+    toast('Could not load job details', 'error');
+  }
+}
+
+function populateTrfDetail(job) {
+  _trfSelectedMaterialId = null; // reset picker state for fresh job
+  // Ensure unit field is unlocked for the new job
+  const unitEl = document.getElementById('trf-mat-unit');
+  if (unitEl) { unitEl.disabled = false; unitEl.style.opacity = ''; unitEl.title = ''; unitEl.value = ''; }
+  const nameEl = document.getElementById('trf-mat-name');
+  if (nameEl) nameEl.value = '';
+  document.getElementById('trf-detail-jobno').textContent  = job.job_no;
+  document.getElementById('trf-detail-title').textContent  = `JOB — ${job.customer_name}`;
+  document.getElementById('trf-status-select').value       = job.status;
+  document.getElementById('trf-edit-customer-name').value  = job.customer_name;
+  document.getElementById('trf-edit-customer-contact').value = job.customer_contact||'';
+  document.getElementById('trf-edit-kva').value            = job.kva_rating||'';
+  document.getElementById('trf-edit-received-date').value  = job.received_date;
+  document.getElementById('trf-edit-expected-date').value  = job.expected_date||'';
+  document.getElementById('trf-edit-fault').value          = job.fault_description||'';
+  document.getElementById('trf-edit-repair').value         = job.repair_work||'';
+  document.getElementById('trf-labour').value              = job.labour_charge||0;
+  document.getElementById('trf-payment-status').value      = job.payment_status||'Pending';
+  renderTrfMaterials(job.materials||[]);
+  renderTrfFiles(job.files||[]);
+  calcTrfBilling(job.materials||[], job.labour_charge||0);
+}
+
+// ── Save job edits ────────────────────────────────────
+async function saveTrfJobEdits() {
+  if (!trfCurrent) return;
+  const body = {
+    customer_name:    document.getElementById('trf-edit-customer-name').value.trim(),
+    customer_contact: document.getElementById('trf-edit-customer-contact').value.trim(),
+    kva_rating:       document.getElementById('trf-edit-kva').value.trim(),
+    received_date:    document.getElementById('trf-edit-received-date').value,
+    expected_date:    document.getElementById('trf-edit-expected-date').value,
+    fault_description: document.getElementById('trf-edit-fault').value,
+    repair_work:      document.getElementById('trf-edit-repair').value,
+  };
+  try {
+    const res = await fetch(`/api/transformer/jobs/${trfCurrent.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) { toast('✓ Job details saved', 'success'); loadTrfJobs(); }
+    else        { const d = await res.json(); toast(d.error||'Save failed', 'error'); }
+  } catch(e) { toast('Server error', 'error'); }
+}
+
+// ── Update status ─────────────────────────────────────
+async function updateTrfStatus() {
+  if (!trfCurrent) return;
+  const status = document.getElementById('trf-status-select').value;
+  try {
+    const res = await fetch(`/api/transformer/jobs/${trfCurrent.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify({ status })
+    });
+    if (res.ok) { toast(`✓ Status → ${status}`, 'success'); trfCurrent.status = status; loadTrfJobs(); }
+    else        { const d = await res.json(); toast(d.error||'Failed', 'error'); }
+  } catch(e) { toast('Server error', 'error'); }
+}
+
+// ── Materials ─────────────────────────────────────────
+function renderTrfMaterials(materials) {
+  const wrap = document.getElementById('trf-materials-wrap');
+  if (!materials.length) {
+    wrap.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon">◈</div>No materials added yet</div>';
+    return;
+  }
+  const rows = materials.map(m => `<tr>
+    <td style="padding:18px 24px;">
+      <strong style="font-size:15px;">${m.material_name}</strong>
+      ${m.material_id ? `<span style="font-size:10px;margin-left:8px;padding:2px 7px;border-radius:3px;background:rgba(0,212,255,0.1);color:var(--accent);font-family:var(--font-mono);border:1px solid rgba(0,212,255,0.25)">INVENTORY</span>` : ''}
+    </td>
+    <td style="font-family:var(--font-mono);font-size:15px;padding:18px 24px;white-space:nowrap;">${m.qty_used} ${m.unit}</td>
+    <td style="font-family:var(--font-mono);font-size:15px;padding:18px 24px;">₹${m.cost_per_unit||0}</td>
+    <td style="font-family:var(--font-mono);font-size:17px;font-weight:700;color:var(--accent);padding:18px 24px;">₹${((m.qty_used||0)*(m.cost_per_unit||0)).toFixed(2)}</td>
+    <td style="font-size:12px;color:var(--muted);padding:18px 24px;">${m.added_by}<br><span style="font-family:var(--font-mono);font-size:10px">${m.added_at||''}</span></td>
+    <td style="padding:18px 24px;"><button class="btn btn-danger btn-sm" style="padding:7px 14px;font-size:12px;" onclick="deleteTrfMaterial(${m.id})">✕ Remove</button></td>
+  </tr>`).join('');
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th style="padding:14px 24px;font-size:12px;letter-spacing:2px;">Material</th>
+      <th style="padding:14px 24px;font-size:12px;letter-spacing:2px;">Qty Used</th>
+      <th style="padding:14px 24px;font-size:12px;letter-spacing:2px;">Rate (₹)</th>
+      <th style="padding:14px 24px;font-size:12px;letter-spacing:2px;">Amount (₹)</th>
+      <th style="padding:14px 24px;font-size:12px;letter-spacing:2px;">Added By</th>
+      <th style="padding:14px 24px;"></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+async function addTrfMaterial() {
+  if (!trfCurrent) return;
+  const name = document.getElementById('trf-mat-name').value.trim();
+  const qty  = parseFloat(document.getElementById('trf-mat-qty').value);
+  const unit = document.getElementById('trf-mat-unit').value.trim();
+  const cost = parseFloat(document.getElementById('trf-mat-cost').value) || 0;
+  if (!name || !qty || qty <= 0) { toast('Enter material name and quantity', 'error'); return; }
+
+  // Warn if trying to add more than available stock from inventory
+  if (_trfSelectedMaterialId !== null) {
+    const inv = state.materials.find(m => m.id === _trfSelectedMaterialId);
+    if (inv && qty > inv.qty) {
+      toast(`Only ${inv.qty} ${inv.unit} of "${inv.name}" in stock`, 'error');
+      return;
+    }
+  }
+
+  try {
+    const res = await fetch(`/api/transformer/jobs/${trfCurrent.id}/materials`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify({
+        material_name: name,
+        qty_used: qty,
+        unit,
+        cost_per_unit: cost,
+        material_id: _trfSelectedMaterialId   // null = custom, integer = inventory link
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      // Capture the linked material id BEFORE resetting state
+      const linkedMatId = _trfSelectedMaterialId;
+
+      trfCurrent.materials = trfCurrent.materials || [];
+      trfCurrent.materials.push({
+        id: data.id,
+        material_name: name,
+        qty_used: qty,
+        unit,
+        cost_per_unit: cost,
+        added_by: currentSession.label,
+        added_at: new Date().toLocaleString('en-IN'),
+        material_id: linkedMatId
+      });
+      renderTrfMaterials(trfCurrent.materials);
+      calcTrfBilling(trfCurrent.materials, parseFloat(document.getElementById('trf-labour').value)||0);
+
+      // Sync motor-inventory local state + activity log in real-time
+      if (linkedMatId !== null && data.newQty !== null && data.newQty !== undefined) {
+        const inv = state.materials.find(m => m.id === linkedMatId);
+        if (inv) {
+          const oldQty = inv.qty;
+          inv.qty = data.newQty;
+          // Add to frontend activity log immediately
+          addLog('restock',
+            `Transformer job ${trfCurrent.job_no}: used ${qty} ${unit} of "${name}" — stock ${oldQty} → ${data.newQty} ${unit}`
+          );
+          renderDashboard();
+          renderInventoryTable();
+          renderLog();
+        }
+      }
+
+      // Reset inputs and state
+      ['trf-mat-name', 'trf-mat-qty', 'trf-mat-cost'].forEach(id => document.getElementById(id).value = '');
+      const unitEl = document.getElementById('trf-mat-unit');
+      unitEl.value = ''; unitEl.disabled = false; unitEl.style.opacity = ''; unitEl.title = '';
+      _trfSelectedMaterialId = null;
+
+      toast(linkedMatId !== null
+        ? `✓ ${name} added — inventory deducted, stock now ${data.newQty} ${unit}`
+        : '✓ Material added', 'success');
+
+    } else { toast(data.error||'Failed', 'error'); }
+  } catch(e) { toast('Server error', 'error'); }
+}
+
+async function deleteTrfMaterial(id) {
+  if (!confirm('Remove this material entry?')) return;
+  try {
+    const res = await fetch(`/api/transformer/materials/${id}`, {
+      method: 'DELETE', headers: { 'x-session-token': currentSession.token }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const removed = trfCurrent.materials.find(m => m.id === id);
+      trfCurrent.materials = trfCurrent.materials.filter(m => m.id !== id);
+      renderTrfMaterials(trfCurrent.materials);
+      calcTrfBilling(trfCurrent.materials, parseFloat(document.getElementById('trf-labour').value)||0);
+
+      // Sync motor-inventory local state + log if this entry was linked
+      if (data.material_id && data.newQty !== null && data.newQty !== undefined) {
+        const inv = state.materials.find(m => m.id === data.material_id);
+        if (inv) {
+          const oldQty = inv.qty;
+          inv.qty = data.newQty;
+          addLog('add',
+            `Transformer job ${trfCurrent.job_no}: material "${removed?.material_name}" entry removed — stock restored ${oldQty} → ${data.newQty} ${inv.unit}`
+          );
+          renderDashboard();
+          renderInventoryTable();
+          renderLog();
+        }
+      }
+
+      toast('Material removed' + (data.material_id ? ' — inventory qty restored' : ''), 'info');
+    }
+  } catch(e) { toast('Server error', 'error'); }
+}
+
+// ── Billing calculation ───────────────────────────────
+function calcTrfBilling(materials, labour) {
+  const matTotal = materials.reduce((s, m) => s + (m.qty_used||0)*(m.cost_per_unit||0), 0);
+  const total    = matTotal + (labour||0);
+  const matEl    = document.getElementById('trf-mat-total');
+  const totEl    = document.getElementById('trf-total');
+  if (matEl) matEl.value = '₹' + matTotal.toFixed(2);
+  if (totEl) totEl.value = '₹' + total.toFixed(2);
+  // Update the card header summary
+  const hdrEl = document.getElementById('trf-materials-total');
+  if (hdrEl) {
+    hdrEl.innerHTML = materials.length
+      ? `<span style="color:var(--text)">${materials.length} item${materials.length>1?'s':''}</span>
+         &nbsp;·&nbsp;
+         <span style="color:var(--accent);font-weight:700">₹${matTotal.toFixed(2)} materials</span>`
+      : '';
+  }
+}
+
+async function saveTrfBilling() {
+  if (!trfCurrent) return;
+  const labour         = parseFloat(document.getElementById('trf-labour').value)||0;
+  const payment_status = document.getElementById('trf-payment-status').value;
+  try {
+    const res = await fetch(`/api/transformer/jobs/${trfCurrent.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify({ labour_charge:labour, payment_status })
+    });
+    if (res.ok) {
+      trfCurrent.labour_charge   = labour;
+      trfCurrent.payment_status  = payment_status;
+      calcTrfBilling(trfCurrent.materials||[], labour);
+      toast('✓ Billing saved', 'success');
+      loadTrfJobs();
+    } else { const d = await res.json(); toast(d.error||'Failed', 'error'); }
+  } catch(e) { toast('Server error', 'error'); }
+}
+
+// ── File upload ───────────────────────────────────────
+async function uploadTrfFile(input) {
+  if (!trfCurrent || !input.files[0]) return;
+  const file = input.files[0];
+  if (file.size > 20*1024*1024) { toast('File too large — max 20MB', 'error'); return; }
+  toast('Uploading...', 'info');
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res  = await fetch(`/api/transformer/jobs/${trfCurrent.id}/files`, {
+      method: 'POST',
+      headers: { 'x-session-token': currentSession.token },
+      body: fd
+    });
+    const data = await res.json();
+    if (res.ok) {
+      trfCurrent.files = trfCurrent.files || [];
+      trfCurrent.files.push(data);
+      renderTrfFiles(trfCurrent.files);
+      toast('✓ File uploaded', 'success');
+      input.value = '';
+    } else { toast(data.error||'Upload failed', 'error'); }
+  } catch(e) { toast('Upload failed', 'error'); }
+}
+
+function renderTrfFiles(files) {
+  const wrap = document.getElementById('trf-files-wrap');
+  if (!files || !files.length) {
+    wrap.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-icon">📄</div>No files uploaded yet</div>';
+    return;
+  }
+  wrap.innerHTML = files.map(f => `
+    <div class="trf-file-item">
+      <span class="trf-file-icon">${fileIcon(f.original_name)}</span>
+      <div style="flex:1">
+        <div class="trf-file-name">${f.original_name}</div>
+        <div class="trf-file-meta">${fmtSize(f.file_size)} · ${f.uploaded_by} · ${f.uploaded_at||''}</div>
+      </div>
+      <a href="/api/transformer/files/${f.filename}" class="btn btn-ghost btn-sm"
+         onclick="event.stopPropagation()" download>⬇ Download</a>
+      <button class="btn btn-danger btn-sm" onclick="deleteTrfFile(${f.id})">✕</button>
+    </div>`).join('');
+}
+
+async function deleteTrfFile(id) {
+  if (!confirm('Delete this file permanently?')) return;
+  try {
+    const res = await fetch(`/api/transformer/files/${id}`, {
+      method: 'DELETE', headers: { 'x-session-token': currentSession.token }
+    });
+    if (res.ok) {
+      trfCurrent.files = trfCurrent.files.filter(f => f.id !== id);
+      renderTrfFiles(trfCurrent.files);
+      toast('File deleted', 'info');
+    }
+  } catch(e) { toast('Server error', 'error'); }
+}
+
+// ── New job form ──────────────────────────────────────
+function initTrfNewJobForm() {
+  document.getElementById('trf-received-date').valueAsDate = new Date();
+}
+
+async function createTrfJob() {
+  const customer_name    = document.getElementById('trf-customer-name').value.trim();
+  const customer_contact = document.getElementById('trf-customer-contact').value.trim();
+  const kva_rating       = document.getElementById('trf-kva').value.trim();
+  const received_date    = document.getElementById('trf-received-date').value;
+  const expected_date    = document.getElementById('trf-expected-date').value;
+  const fault_description = document.getElementById('trf-fault').value.trim();
+
+  if (!customer_name)  { toast('Enter customer name', 'error'); return; }
+  if (!received_date)  { toast('Select date received', 'error'); return; }
+
+  try {
+    const res = await fetch('/api/transformer/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-session-token': currentSession.token },
+      body: JSON.stringify({ customer_name, customer_contact, kva_rating, received_date, expected_date, fault_description })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      toast(`✓ Job ${data.job_no} created`, 'success');
+      clearTrfNewJobForm();
+      await loadTrfJobs();
+      openTrfJob(data.id);
+    } else { toast(data.error||'Failed', 'error'); }
+  } catch(e) { toast('Server error', 'error'); }
+}
+
+function clearTrfNewJobForm() {
+  ['trf-customer-name','trf-customer-contact','trf-kva','trf-expected-date','trf-fault'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('trf-received-date').valueAsDate = new Date();
+}
+
+// ── Wire up billing recalc on labour change ───────────
+document.addEventListener('DOMContentLoaded', () => {
+  const labourEl = document.getElementById('trf-labour');
+  if (labourEl) labourEl.addEventListener('input', () => {
+    calcTrfBilling(trfCurrent?.materials||[], parseFloat(labourEl.value)||0);
+  });
+});
+
+// ════════════════════════════════════════════════════
+// SERVER STATUS PING
+// ════════════════════════════════════════════════════
+async function checkServerStatus() {
+  const pill = document.getElementById('server-status-pill');
+  const text = document.getElementById('server-status-text');
+  try {
+    await fetch('/api/me', {
+      headers: { 'x-session-token': currentSession?.token || '' },
+      signal: AbortSignal.timeout(3000)
+    });
+    pill.classList.remove('offline');
+    text.textContent = ' ONLINE';
+  } catch(e) {
+    pill.classList.add('offline');
+    text.textContent = ' OFFLINE';
+  }
+}
+checkServerStatus();
+setInterval(checkServerStatus, 15000);
+
+// Reposition the fixed-position materials dropdown on scroll or resize
+window.addEventListener('scroll', () => {
+  const dd = document.getElementById('trf-mat-dropdown');
+  if (dd && dd.style.display !== 'none') _positionTrfDropdown();
+}, true);
+window.addEventListener('resize', () => {
+  const dd = document.getElementById('trf-mat-dropdown');
+  if (dd && dd.style.display !== 'none') _positionTrfDropdown();
+});
+</script>
+</body>
+</html>
